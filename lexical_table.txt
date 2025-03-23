@@ -1,0 +1,52 @@
+| Expression                                                       | Token          |
+|------------------------------------------------------------------+----------------|
+| LETTER [a-zA-Z]                                                  |                |
+| NUMBER [0-9]                                                     |                |
+| NAME {LETTER}({LETTER}!{NUMBER} !_ )*({LETTER}!{NUMBER})         | ID             |
+| INT_LITERAL "-"?{NUMBER}+                                        | INT_LITERAL    |
+| FLOAT_LITERAL "-"?({NUMBER}+\.{NUMBER}+)(e["+"!"-"]{NUMBER}{2})? | FLOAT_LITERAL  |
+| STRING_LITERAL \".\"                                             | STRING_LITERAL |
+| program                                                          | KW_PROGRAM     |
+| procedure                                                        | KW_PROCEDURE   |
+| begin                                                            | KW_BEGIN       |
+| end                                                              | KW_END         |
+| in                                                               | KW_IN          |
+| struct                                                           | KW_STRUCT      |
+| var                                                              | KW_VAR         |
+| int                                                              | KW_INT         |
+| float                                                            | KW_FLOAT       |
+| string                                                           | KW_STRING      |
+| bool                                                             | KW_BOOL        |
+| ref                                                              | KW_REF         |
+| deref                                                            | KW_DEREF       |
+| return                                                           | KW_RETURN      |
+| while                                                            | KW_WHILE       |
+| do                                                               | KW_DO          |
+| od                                                               | KW_OD          |
+| if                                                               | KW_IF          |
+| then                                                             | KW_THEN        |
+| else                                                             | KW_ELSE        |
+| fi                                                               | KW_FI          |
+| true                                                             | KW_TRUE        |
+| false                                                            | KW_FALSE       |
+| new                                                              | KW_NEW         |
+| null                                                             | KW_NULL        |
+| ";"                                                              | KW_SEMICOLUMN  |
+| ":"                                                              | KW_COLUMN      |
+| ","                                                              | KW_COMMA       |
+| ":="                                                             | OP_ASSIGN      |
+| not                                                              | OP_NOT         |
+| &&                                                               | OP_AND         |
+| !!                                                               | OP_OR          |
+| ["<"|"<="|">"|">="|"="|"<>"]                                     | OP_COMPARE     |
+| (                                                                | OPEN_PAREN     |
+| )                                                                | CLOSE_PAREN    |
+| [                                                                | OPEN_BRACKET   |
+| ]                                                                | CLOSE_BRACKET  |
+| {                                                                | OPEN_CURLY     |
+| }                                                                | CLOSE_CURLY    |
+|                                                                  |                |
+
+#Obs: in the regular expressions, consider "!" as "|", i.e. an or operator. Also,
+KW stands for keyword
+      
