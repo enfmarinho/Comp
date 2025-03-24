@@ -1,49 +1,5 @@
 %{
-    enum TOKEN : char {
-        ID,
-        FLOAT_LITERAL,
-        INT_LITERAL,
-        STRING_LITERAL,
-        KW_PROGRAM,
-        KW_PROCEDURE,
-        KW_BEGIN,
-        KW_END,
-        KW_IN,
-        KW_STRUCT,
-        KW_VAR,
-        KW_INT,
-        KW_FLOAT,
-        KW_STRING,
-        KW_BOOL, 
-        KW_REF,
-        KW_DEREF,
-        KW_RETURN,
-        KW_WHILE,
-        KW_DO,
-        KW_OD,
-        KW_IF,
-        KW_THEN,
-        KW_ELSE,
-        KW_FI,
-        KW_TRUE,
-        KW_FALSE,
-        KW_NEW,
-        KW_NULL,
-        KW_SEMICOLUMN,
-        KW_COLUMN,
-        KW_COMMA,
-        OP_ASSIGN,
-        OP_NOT,
-        OP_AND,
-        OP_OR,
-        OP_COMPARE,
-        OPEN_PAREN,
-        CLOSE_PAREN,
-        OPEN_BRACKET,
-        CLOSE_BRACKET,
-        OPEN_CURLY,
-        CLOSE_CURLY
-    };
+    #include "token_simble.h"
 
     void insert_simble(char* simble){
         printf("insert simble %s\n", simble);
@@ -63,12 +19,10 @@ INT_LITERAL "-"?{NUMBER}+
 FLOAT_LITERAL "-"?({NUMBER}+"."{NUMBER}+)(e["+"|"-"]{NUMBER}{2})?
 STRING_LITERAL \".*\"
 
-COMMENT "//".*
-MULTLINE_COMMENT "/*"[."\n"]*"*/"
-
 %%
 
  // TODO remove these print statements
+ // TODO ignore comments
 {INT_LITERAL} {
     insert_token(INT_LITERAL);
     printf("INT_LITERAL %s\n", yytext);
@@ -242,8 +196,8 @@ not {
     insert_token(ID);
     printf("ID %s\n", yytext);
 } 
-[ "\n"]|{COMMENT}|{MULTLINE_COMMENT} {
-    // ignore spaces, line jumps and comments
+[ "\n"] {
+    // ignore spaces and line jumps
 }
 . {
     printf("INVALID CHAR: %s", yytext);
