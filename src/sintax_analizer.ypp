@@ -1,14 +1,34 @@
 %{
+
+#include "lex.yy.cc"
+
 #include <cstdio>
 void yyerror(char *s) {
-    fprintf(stderr, "line %d: %s", current_line_number, s);
+    fprintf(stderr, "line %d: %s", curr_line, s);
 }
+
 %}
 
+%union {
+    struct {
+        int value;
+        int line, column;
+    } int_value;
+    struct {
+        float value;
+        int line, column;
+    } float_value;
+    struct {
+        char *value;
+        int line, column;
+    } string_value;
+    int line, column;
+} 
+
 %token ID
-%token FLOAT_LITERAL
-%token INT_LITERAL
-%token STRING_LITERAL
+%token <int_value> INT_LITERAL
+%token <float_value> FLOAT_LITERAL
+%token <string_value> STRING_LITERAL
 %token KW_PROGRAM
 %token KW_PROCEDURE
 %token KW_BEGIN
@@ -57,3 +77,5 @@ void yyerror(char *s) {
 %%
 
 type : ID
+
+%%
