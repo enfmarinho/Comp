@@ -1,5 +1,4 @@
 %{
-
     enum TOKEN : char {
       ID,
       FLOAT_LITERAL,
@@ -45,14 +44,6 @@
       OPEN_CURLY,
       CLOSE_CURLY
     };
-
-    void insert_simble(char* simble){
-        printf("insert simble %s\n", simble);
-    }
-
-    void insert_token(enum TOKEN token) {
-        printf("insert token ");
-    }
 %}
 
 %x COMMENT
@@ -95,177 +86,176 @@ STRING_LITERAL \".*\"
 }
 
 {INT_LITERAL} {
-    insert_token(INT_LITERAL);
     printf("INT_LITERAL %s\n", yytext);
+    return INT_LITERAL;
 }
 {FLOAT_LITERAL} {
-    insert_token(FLOAT_LITERAL);
     printf("FLOAT_LITERAL %s\n", yytext);
+    return FLOAT_LITERAL;
 } 
 {STRING_LITERAL} {
-    insert_token(STRING_LITERAL);
     printf("STRING_LITERAL %s\n", yytext);
+    return STRING_LITERAL;
 }
 program {
-    insert_token(KW_PROGRAM);
     printf("KW_PROGRAM \n");
+    return KW_PROGRAM;
 } 
 procedure {
-    insert_token(KW_PROCEDURE);
     printf("KW_PROCEDURE \n");
+    return KW_PROCEDURE;
 } 
 begin {
-    insert_token(KW_BEGIN);
     printf("KW_BEGIN \n");
+    return KW_BEGIN;
 } 
 end {
-    insert_token(KW_END);
     printf("KW_END \n");
+    return KW_END;
 } 
 in {
-    insert_token(KW_IN);
     printf("KW_IN \n");
+    return KW_IN;
 }
 struct {
-    insert_token(KW_STRUCT);
     printf("KW_STRUCT \n");
+    return KW_STRUCT;
 } 
 var {
-    insert_token(KW_VAR);
     printf("KW_VAR \n");
+    return KW_VAR;
 } 
 int {
-    insert_token(KW_INT);
     printf("KW_INT \n");
+    return KW_INT;
 } 
 float {
-    insert_token(KW_FLOAT);
     printf("KW_FLOAT \n");
+    return KW_FLOAT;
 } 
 string {
-    insert_token(KW_STRING);
     printf("KW_STRING \n");
+    return KW_STRING;
 } 
 bool {
-    insert_token(KW_BOOL);
     printf("KW_BOOL \n");
+    return KW_BOOL;
 } 
 ref {
-    insert_token(KW_REF);
     printf("KW_REF \n");
+    return KW_REF;
 } 
 deref {
-    insert_token(KW_DEREF);
     printf("KW_DEREF \n");
+    return KW_DEREF;
 } 
 return {
-    insert_token(KW_RETURN);
     printf("KW_RETURN \n");
+    return KW_RETURN;
 } 
 while {
-    insert_token(KW_WHILE);
     printf("KW_WHILE \n");
+    return KW_WHILE;
 } 
 do {
-    insert_token(KW_DO);
     printf("KW_DO \n");
+    return KW_DO;
 } 
 od {
-    insert_token(KW_OD);
     printf("KW_OD \n");
+    return KW_OD;
 } 
 if {
-    insert_token(KW_IF);
     printf("KW_IF \n");
+    return KW_IF;
 } 
 then {
-    insert_token(KW_THEN);
     printf("KW_THEN \n");
+    return KW_THEN;
 } 
 else {
-    insert_token(KW_ELSE);
     printf("KW_ELSE \n");
+    return KW_ELSE;
 } 
 fi {
-    insert_token(KW_FI);
     printf("KW_FI \n");
+    return KW_FI;
 } 
 true {
-    insert_token(KW_TRUE);
     printf("KW_TRUE \n");
+    return KW_TRUE;
 } 
 false {
-    insert_token(KW_FALSE);
     printf("KW_FALSE \n");
+    return KW_FALSE;
 } 
 new {
-    insert_token(KW_NEW);
     printf("KW_NEW \n");
+    return KW_NEW;
 } 
 null {
-    insert_token(KW_NULL);
     printf("KW_NULL \n");
+    return KW_NULL;
 } 
 ";" {
-    insert_token(KW_SEMICOLUMN);
     printf("KW_SEMICOLUMN\n");
+    return KW_SEMICOLUMN;
 } 
 ":" {
-    insert_token(KW_COLUMN);
     printf("KW_COLUMN\n");
+    return KW_COLUMN;
 } 
 "," {
-    insert_token(KW_COMMA);
     printf("KW_COMMA\n");
+    return KW_COMMA;
 } 
 ":=" {
-    insert_token(OP_ASSIGN);
     printf("OP_ASSIGN\n");
+    return OP_ASSIGN;
 } 
 not {
-    insert_token(OP_NOT);
     printf("OP_NOT \n");
+    return OP_NOT;
 } 
 "&&" {
-    insert_token(OP_AND);
     printf("OP_AND \n");
+    return OP_AND;
 } 
 "||" {
-    insert_token(OP_OR);
     printf("OP_OR \n");
+    return OP_OR;
 } 
 ["<"|"<="|">"|">="|"="|"<>"] {
-    insert_token(OP_COMPARE);
     printf("OP_COMPARE \n");
+    return OP_COMPARE;
 }
 "(" {
-    insert_token(OPEN_PAREN);
     printf("OPEN_PAREN \n");
+    return OPEN_PAREN;
 } 
 ")" {
-    insert_token(CLOSE_PAREN);
     printf("CLOSE_PAREN \n");
+    return CLOSE_PAREN;
 } 
 "[" {
-    insert_token(OPEN_BRACKET);
     printf("OPEN_BRACKET \n");
+    return OPEN_BRACKET;
 } 
 "]" {
-    insert_token(CLOSE_BRACKET);
     printf("CLOSE_BRACKET \n");
+    return CLOSE_BRACKET;
 } 
 "{" {
-    insert_token(OPEN_CURLY);
     printf("OPEN_CURLY \n");
+    return OPEN_CURLY;
 } 
 "}" {
-    insert_token(CLOSE_CURLY);
     printf("CLOSE_CURLY \n");
+    return CLOSE_CURLY;
 } 
 {NAME} {
-    insert_simble(yytext);
-    insert_token(ID);
     printf("ID %s\n", yytext);
+    return ID;
 } 
 " " {
     // Ignore spaces
@@ -282,5 +272,8 @@ int yywrap() { return 1; }
 
 int main()
 {
-    yylex();
+    enum TOKEN token = yylex();
+    while (token) {
+        token = yylex();
+    }
 }
