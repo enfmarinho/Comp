@@ -224,12 +224,13 @@ not {
 }
 
 %%
-int yywrap() { return 1; }
+int yyFlexLexer::yywrap() { return 1; }
 
 int main()
 {
-    enum TOKEN token = yylex();
+    yyFlexLexer lexer;
+    int token = lexer.yylex();
     while (token) {
-        token = yylex();
+        token = lexer.yylex();
     }
 }
