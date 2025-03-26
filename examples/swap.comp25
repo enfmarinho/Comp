@@ -1,5 +1,9 @@
+/*
+ * This is an example of a program in the comp25 language 
+ */
 program swap
     begin 
+        // Procedure to swap two values //
         procedure swap(a: ref(int), b: ref(int))
         begin
             var tmp: int
@@ -9,6 +13,7 @@ program swap
             deref(b) := tmp
         end;
 
+        /// Testing swap procedure
         procedure main()
             begin
                 var x: int;
