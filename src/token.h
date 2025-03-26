@@ -1,0 +1,50 @@
+#ifndef TOKEN_H
+#define TOKEN_H
+
+enum TOKEN : char {
+  ID = 1, // Starts at 1, because yylex() returns 0 at EOF
+  FLOAT_LITERAL,
+  INT_LITERAL,
+  STRING_LITERAL,
+  KW_PROGRAM,
+  KW_PROCEDURE,
+  KW_BEGIN,
+  KW_END,
+  KW_IN,
+  KW_STRUCT,
+  KW_VAR,
+  KW_INT,
+  KW_FLOAT,
+  KW_STRING,
+  KW_BOOL,
+  KW_REF,
+  KW_DEREF,
+  KW_RETURN,
+  KW_WHILE,
+  KW_DO,
+  KW_OD,
+  KW_IF,
+  KW_THEN,
+  KW_ELSE,
+  KW_FI,
+  KW_TRUE,
+  KW_FALSE,
+  KW_NEW,
+  KW_NULL,
+  KW_SEMICOLUMN,
+  KW_COLUMN,
+  KW_COMMA,
+  OP_ASSIGN,
+  OP_NOT,
+  OP_AND,
+  OP_OR,
+  OP_COMPARE,
+  OPEN_PAREN,
+  CLOSE_PAREN,
+  OPEN_BRACKET,
+  CLOSE_BRACKET,
+  OPEN_CURLY,
+  CLOSE_CURLY
+};
+
+#endif // !TOKEN_H
