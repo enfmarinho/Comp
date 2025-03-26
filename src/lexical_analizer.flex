@@ -104,7 +104,7 @@ STRING_LITERAL \".*\"
     simble_table.insert({yytext, {STRING_LITERAL}});
 
     yylval.string_value.value = new char[yyleng + 1];
-    std::strcmp(yylval.string_value.value, yytext);
+    std::strcpy(yylval.string_value.value, yytext);
     yylval.string_value.line = curr_line;
     yylval.string_value.column = curr_column;
     curr_column += yyleng;
