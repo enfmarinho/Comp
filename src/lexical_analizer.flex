@@ -1,5 +1,15 @@
 %{
-    #include "token.h"
+#include "token.h"
+#include <unordered_map>
+#include <string>
+
+    struct Simble {
+        TOKEN token;
+
+        Simble(TOKEN token) : token(token){}
+    };
+
+    std::unordered_multimap<std::string, Simble> simble_table;
 %}
 
 %x COMMENT
@@ -42,14 +52,17 @@ STRING_LITERAL \".*\"
 }
 
 {INT_LITERAL} {
+    simble_table.insert({yytext, {INT_LITERAL}});
     printf("INT_LITERAL %s\n", yytext);
     return INT_LITERAL;
 }
 {FLOAT_LITERAL} {
+    simble_table.insert({yytext, {FLOAT_LITERAL}});
     printf("FLOAT_LITERAL %s\n", yytext);
     return FLOAT_LITERAL;
 } 
 {STRING_LITERAL} {
+    simble_table.insert({yytext, {STRING_LITERAL}});
     printf("STRING_LITERAL %s\n", yytext);
     return STRING_LITERAL;
 }
@@ -210,6 +223,7 @@ not {
     return CLOSE_CURLY;
 } 
 {NAME} {
+    simble_table.insert({yytext, {ID}});
     printf("ID %s\n", yytext);
     return ID;
 } 
