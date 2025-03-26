@@ -194,9 +194,29 @@ not {
     printf("OP_OR \n");
     return OP_OR;
 } 
-["<"|"<="|">"|">="|"="|"<>"] {
-    printf("OP_COMPARE \n");
-    return OP_COMPARE;
+"<" {
+    printf("OP_SMALLER \n");
+    return OP_SMALLER;
+}
+"<=" {
+    printf("OP_SMALLER_OR_EQ \n");
+    return OP_SMALLER_OR_EQ;
+}
+">" {
+    printf("OP_GREATER \n");
+    return OP_GREATER;
+}
+">=" {
+    printf("OP_GREATER_OR_EQ \n");
+    return OP_GREATER_OR_EQ;
+}
+"=" {
+    printf("OP_EQUAL \n");
+    return OP_EQUAL;
+}
+"<>" {
+    printf("OP_NOT_EQUAL \n");
+    return OP_NOT_EQUAL;
 }
 "(" {
     printf("OPEN_PAREN \n");
