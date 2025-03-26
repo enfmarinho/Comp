@@ -1,5 +1,50 @@
 %{
-    #include "token_simble.h"
+
+    enum TOKEN : char {
+      ID,
+      FLOAT_LITERAL,
+      INT_LITERAL,
+      STRING_LITERAL,
+      KW_PROGRAM,
+      KW_PROCEDURE,
+      KW_BEGIN,
+      KW_END,
+      KW_IN,
+      KW_STRUCT,
+      KW_VAR,
+      KW_INT,
+      KW_FLOAT,
+      KW_STRING,
+      KW_BOOL,
+      KW_REF,
+      KW_DEREF,
+      KW_RETURN,
+      KW_WHILE,
+      KW_DO,
+      KW_OD,
+      KW_IF,
+      KW_THEN,
+      KW_ELSE,
+      KW_FI,
+      KW_TRUE,
+      KW_FALSE,
+      KW_NEW,
+      KW_NULL,
+      KW_SEMICOLUMN,
+      KW_COLUMN,
+      KW_COMMA,
+      OP_ASSIGN,
+      OP_NOT,
+      OP_AND,
+      OP_OR,
+      OP_COMPARE,
+      OPEN_PAREN,
+      CLOSE_PAREN,
+      OPEN_BRACKET,
+      CLOSE_BRACKET,
+      OPEN_CURLY,
+      CLOSE_CURLY
+    };
 
     void insert_simble(char* simble){
         printf("insert simble %s\n", simble);
@@ -9,6 +54,9 @@
         printf("insert token ");
     }
 %}
+
+%x COMMENT
+%x MULTILINE_COMMENT
 
 LETTER [A-Za-z]
 NUMBER [0-9]
@@ -20,9 +68,32 @@ FLOAT_LITERAL "-"?({NUMBER}+"."{NUMBER}+)(e["+"|"-"]{NUMBER}{2})?
 STRING_LITERAL \".*\"
 
 %%
-
  // TODO remove these print statements
- // TODO ignore comments
+
+ // Comment stuff
+"//" {
+    printf("start comment\n");
+    BEGIN(COMMENT);
+}
+<COMMENT>. {
+    // Ignore every character in the comment
+}
+<COMMENT>"\n" {
+    printf("finished comment\n");
+    BEGIN(INITIAL);
+}
+"/*" {
+    printf("start multi-line comment\n");
+    BEGIN(MULTILINE_COMMENT);
+}
+<MULTILINE_COMMENT>.|"\n" {
+    // Ignore every character
+}
+<MULTILINE_COMMENT>"*/" {
+    printf("finished multi-line comment\n");
+    BEGIN(INITIAL);
+}
+
 {INT_LITERAL} {
     insert_token(INT_LITERAL);
     printf("INT_LITERAL %s\n", yytext);
@@ -196,8 +267,11 @@ not {
     insert_token(ID);
     printf("ID %s\n", yytext);
 } 
-[ "\n"] {
-    // ignore spaces and line jumps
+" " {
+    // Ignore spaces
+}
+"\n" {
+    // Ignore line jumps
 }
 . {
     printf("INVALID CHAR: %s", yytext);
