@@ -1,36 +1,10 @@
 %{
-#include "token.h"
-#include <unordered_map>
-#include <string>
+#include "parser.tab.hpp"
 #include <cstdlib>
 
-    struct Simble {
-        TOKEN token;
-
-        Simble(TOKEN token) : token(token){}
-    };
-
-    std::unordered_multimap<std::string, Simble> simble_table;
-
-    union {
-        struct {
-            int value;
-            int line, column;
-        } int_value;
-        struct {
-            float value;
-            int line, column;
-        } float_value;
-        struct {
-            char* value;
-            int line, column;
-        } string_value;
-        int line, column;
-    } yylval;
-
     int curr_line = 1, curr_column = 0;
-    yy_size_t yyleng =0 ;
 
+    YYSTYPE yylval;
     void update_trivial_info() {
         yylval.line = curr_line;
         yylval.column = curr_column;
@@ -79,8 +53,6 @@ STRING_LITERAL \".*\"
 }
 
 {INT_LITERAL} {
-    simble_table.insert({yytext, {INT_LITERAL}});
-
     yylval.int_value.value = std::atoi(yytext);
     yylval.int_value.line = curr_line;
     yylval.int_value.column = curr_column;
@@ -90,8 +62,6 @@ STRING_LITERAL \".*\"
     return INT_LITERAL;
 }
 {FLOAT_LITERAL} {
-    simble_table.insert({yytext, {FLOAT_LITERAL}});
-
     yylval.float_value.value = std::atof(yytext);
     yylval.float_value.line = curr_line;
     yylval.float_value.column = curr_column;
@@ -101,8 +71,6 @@ STRING_LITERAL \".*\"
     return FLOAT_LITERAL;
 } 
 {STRING_LITERAL} {
-    simble_table.insert({yytext, {STRING_LITERAL}});
-
     yylval.string_value.value = new char[yyleng + 1];
     std::strcpy(yylval.string_value.value, yytext);
     yylval.string_value.line = curr_line;
@@ -334,7 +302,6 @@ not {
 } 
 {NAME} {
     update_trivial_info();
-    simble_table.insert({yytext, {ID}});
     printf("ID %s\n", yytext);
     return ID;
 } 
@@ -352,13 +319,6 @@ not {
 }
 
 %%
-int yyFlexLexer::yywrap() { return 1; }
 
-int main()
-{
-    yyFlexLexer lexer;
-    int token = lexer.yylex();
-    while (token) {
-        token = lexer.yylex();
-    }
-}
+// We can do that, since are only dealing with one file
+int yyFlexLexer::yywrap() { return 1; }
