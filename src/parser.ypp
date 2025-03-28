@@ -1,10 +1,12 @@
 %{
 
-#include "lex.yy.cc"
+#include "parser.tab.hpp"
 #include <cstdio>
 
+extern int yylex();
+
 void yyerror(char *s) {
-    fprintf(stderr, "line %d: %s", curr_line, s);
+    fprintf(stderr, "line ?: %s", s);
 }
 
 %}

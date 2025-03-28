@@ -4,7 +4,6 @@
 
     int curr_line = 1, curr_column = 0;
 
-    YYSTYPE yylval;
     void update_trivial_info() {
         yylval.general_values.line = curr_line;
         yylval.general_values.column = curr_column;
@@ -72,7 +71,7 @@ STRING_LITERAL \".*\"
 } 
 {STRING_LITERAL} {
     yylval.string_value.value = new char[yyleng + 1];
-    std::strcpy(yylval.string_value.value, yytext);
+   strcpy(yylval.string_value.value, yytext);
     yylval.string_value.line = curr_line;
     yylval.string_value.column = curr_column;
     curr_column += yyleng;
@@ -331,8 +330,8 @@ not {
     return CLOSE_CURLY;
 } 
 {NAME} {
-    yylval.id.value = new char[yyleng + 1];
-    std::strcpy(yylval.string_value.value, yytext);
+    yylval.id.simble = new char[yyleng + 1];
+    strcpy(yylval.id.simble, yytext);
     yylval.id.line = curr_line;
     yylval.id.column = curr_column;
     curr_column += yyleng;
@@ -356,4 +355,4 @@ not {
 %%
 
 // We can do that, since are only dealing with one file
-int yyFlexLexer::yywrap() { return 1; }
+int yywrap() { return 1; }
