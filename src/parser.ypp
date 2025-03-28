@@ -86,7 +86,20 @@ void yyerror(char *s) {
 %token <general_values> OPEN_CURLY
 %token <general_values> CLOSE_CURLY
 
+// precedence related stuff
 %start program
+
+%left OP_OR
+%left OP_AND
+%left OP_NOT_EQUAL OP_EQUAL
+%left OP_SMALLER OP_GREATER OP_SMALLER_OR_EQ OP_GREATER_OR_EQ
+%left OP_ADD OP_SUB
+%left OP_MULT OP_DIV
+
+%right OP_EXP
+%right OP_NOT
+%right KW_REF KW_DEREF
+%right KW_DOT
 
 %%
 
@@ -98,7 +111,7 @@ opt_decl_list : /* empty */ {}
               ;
 
 decl_list : decl {}
-          | decl KW_SEMICOLUMN decl_list {}
+          | decl_list KW_SEMICOLUMN decl {}
           ;
 
 decl : var_decl {}
@@ -115,14 +128,13 @@ opt_proc_return_type : /*empty*/ {}
                      | KW_COLUMN type {}
                      ;
 
-opt_proc_decl_list : /* empty */ {}
-                   | decl_list KW_IN {}
-                   ;
-
-
 proc_decl : KW_PROCEDURE ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN opt_proc_return_type KW_BEGIN 
-                opt_proc_decl_list stmt_list KW_END {}
+                proc_body KW_END {}
           ; 
+
+proc_body : stmt_list 
+          | decl_list KW_IN stmt_list
+          ;
 
 rec_decl : KW_STRUCT ID OPEN_CURLY opt_paramfield_decl_list_semicolumn CLOSE_CURLY {}
          ;
@@ -151,13 +163,13 @@ opt_stmt_list : /* empty */ {}
               ;
 
 stmt_list : stmt {}
-          | stmt KW_SEMICOLUMN stmt_list {}
+          | stmt_list KW_SEMICOLUMN stmt {}
           ;
 
-exp : exp log_op exp {}
-    | OP_NOT exp {}
-    | exp rel_op exp {}
-    | exp arith_op exp {}
+exp : exp log_op exp %prec OP_AND {}
+    | exp rel_op exp %prec OP_SMALLER {}
+    | exp arith_op exp %prec OP_AND {}
+    | OP_NOT exp %prec OP_NOT {}
     | literal {}
     | call_stmt {}
     | KW_NEW ID {}
@@ -236,7 +248,7 @@ opt_exp_list : /* empty */ {}
              ;
 
 exp_list : exp {}
-         | exp KW_COMMA exp_list {}
+         | exp_list KW_COMMA exp {}
 
 call_stmt : ID OPEN_PAREN opt_exp_list CLOSE_PAREN {}
           ;
