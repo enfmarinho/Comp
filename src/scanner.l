@@ -6,8 +6,8 @@
 
     YYSTYPE yylval;
     void update_trivial_info() {
-        yylval.line = curr_line;
-        yylval.column = curr_column;
+        yylval.general_values.line = curr_line;
+        yylval.general_values.column = curr_column;
 
         curr_column += yyleng;
     }
@@ -220,6 +220,11 @@ null {
     printf("KW_COMMA\n");
     return KW_COMMA;
 } 
+"." {
+    update_trivial_info();
+    printf("KW_DOT\n");
+    return KW_DOT;
+} 
 ":=" {
     update_trivial_info();
     printf("OP_ASSIGN\n");
@@ -229,6 +234,31 @@ not {
     update_trivial_info();
     printf("OP_NOT \n");
     return OP_NOT;
+} 
+"+" {
+    update_trivial_info();
+    printf("OP_ADD \n");
+    return OP_ADD;
+} 
+"-" {
+    update_trivial_info();
+    printf("OP_SUB \n");
+    return OP_SUB;
+} 
+"*" {
+    update_trivial_info();
+    printf("OP_MULT \n");
+    return OP_MULT;
+} 
+"/" {
+    update_trivial_info();
+    printf("OP_DIV \n");
+    return OP_DIV;
+} 
+"^" {
+    update_trivial_info();
+    printf("OP_EXP \n");
+    return OP_EXP;
 } 
 "&&" {
     update_trivial_info();
@@ -301,7 +331,12 @@ not {
     return CLOSE_CURLY;
 } 
 {NAME} {
-    update_trivial_info();
+    yylval.id.value = new char[yyleng + 1];
+    std::strcpy(yylval.string_value.value, yytext);
+    yylval.id.line = curr_line;
+    yylval.id.column = curr_column;
+    curr_column += yyleng;
+
     printf("ID %s\n", yytext);
     return ID;
 } 
