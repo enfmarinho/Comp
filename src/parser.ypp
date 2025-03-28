@@ -1,8 +1,8 @@
 %{
 
 #include "lex.yy.cc"
-
 #include <cstdio>
+
 void yyerror(char *s) {
     fprintf(stderr, "line %d: %s", curr_line, s);
 }
@@ -22,60 +22,231 @@ void yyerror(char *s) {
         char *value;
         int line, column;
     } string_value;
-    int line, column;
+    struct {
+        char *simble;
+        int line, column;
+    } id;
+    struct {
+        int line, column;
+    } general_values;
 } 
 
-%token ID
+%token <id> ID
 %token <int_value> INT_LITERAL
 %token <float_value> FLOAT_LITERAL
 %token <string_value> STRING_LITERAL
-%token KW_PROGRAM
-%token KW_PROCEDURE
-%token KW_BEGIN
-%token KW_END
-%token KW_IN
-%token KW_STRUCT
-%token KW_VAR
-%token KW_INT
-%token KW_FLOAT
-%token KW_STRING
-%token KW_BOOL
-%token KW_REF
-%token KW_DEREF
-%token KW_RETURN
-%token KW_WHILE
-%token KW_DO
-%token KW_OD
-%token KW_IF
-%token KW_THEN
-%token KW_ELSE
-%token KW_FI
-%token KW_TRUE
-%token KW_FALSE
-%token KW_NEW
-%token KW_NULL
-%token KW_SEMICOLUMN
-%token KW_COLUMN
-%token KW_COMMA
-%token OP_ASSIGN
-%token OP_NOT
-%token OP_AND
-%token OP_OR
-%token OP_SMALLER
-%token OP_SMALLER_OR_EQ
-%token OP_GREATER
-%token OP_GREATER_OR_EQ
-%token OP_EQUAL
-%token OP_NOT_EQUAL
-%token OPEN_PAREN
-%token CLOSE_PAREN
-%token OPEN_BRACKET
-%token CLOSE_BRACKET
-%token OPEN_CURLY
-%token CLOSE_CURLY
+%token <general_values> KW_PROGRAM
+%token <general_values> KW_PROCEDURE
+%token <general_values> KW_BEGIN
+%token <general_values> KW_END
+%token <general_values> KW_IN
+%token <general_values> KW_STRUCT
+%token <general_values> KW_VAR
+%token <general_values> KW_INT
+%token <general_values> KW_FLOAT
+%token <general_values> KW_STRING
+%token <general_values> KW_BOOL
+%token <general_values> KW_REF
+%token <general_values> KW_DEREF
+%token <general_values> KW_RETURN
+%token <general_values> KW_WHILE
+%token <general_values> KW_DO
+%token <general_values> KW_OD
+%token <general_values> KW_IF
+%token <general_values> KW_THEN
+%token <general_values> KW_ELSE
+%token <general_values> KW_FI
+%token <general_values> KW_TRUE
+%token <general_values> KW_FALSE
+%token <general_values> KW_NEW
+%token <general_values> KW_NULL
+%token <general_values> KW_SEMICOLUMN
+%token <general_values> KW_COLUMN
+%token <general_values> KW_COMMA
+%token <general_values> KW_DOT
+%token <general_values> OP_ADD
+%token <general_values> OP_SUB
+%token <general_values> OP_MULT
+%token <general_values> OP_DIV
+%token <general_values> OP_EXP
+%token <general_values> OP_ASSIGN
+%token <general_values> OP_NOT
+%token <general_values> OP_AND
+%token <general_values> OP_OR
+%token <general_values> OP_SMALLER
+%token <general_values> OP_SMALLER_OR_EQ
+%token <general_values> OP_GREATER
+%token <general_values> OP_GREATER_OR_EQ
+%token <general_values> OP_EQUAL
+%token <general_values> OP_NOT_EQUAL
+%token <general_values> OPEN_PAREN
+%token <general_values> CLOSE_PAREN
+%token <general_values> OPEN_BRACKET
+%token <general_values> CLOSE_BRACKET
+%token <general_values> OPEN_CURLY
+%token <general_values> CLOSE_CURLY
+
+%start program
 
 %%
 
-type : ID
+program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {}
+        ;
+
+opt_decl_list : /* empty */ {}
+              | decl_list {}
+              ;
+
+decl_list : decl {}
+          | decl KW_SEMICOLUMN decl_list {}
+          ;
+
+decl : var_decl {}
+     | proc_decl {}
+     | rec_decl {}
+     ;
+
+var_decl : KW_VAR ID KW_COLUMN type {}
+         | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {}
+         | KW_VAR ID OP_ASSIGN exp {}
+         ;
+
+opt_proc_return_type : /*empty*/ {}
+                     | KW_COLUMN type {}
+                     ;
+
+opt_proc_decl_list : /* empty */ {}
+                   | decl_list KW_IN {}
+                   ;
+
+
+proc_decl : KW_PROCEDURE ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN opt_proc_return_type KW_BEGIN 
+                opt_proc_decl_list stmt_list KW_END {}
+          ; 
+
+rec_decl : KW_STRUCT ID OPEN_CURLY opt_paramfield_decl_list_semicolumn CLOSE_CURLY {}
+         ;
+
+paramfield_decl : ID KW_COLUMN type {}
+                ;
+
+opt_paramfield_decl_list_comma : /* empty */
+                               | paramfield_decl_list_comma {}
+                               ;
+
+opt_paramfield_decl_list_semicolumn : /* empty */
+                                    | paramfield_decl_list_semicolumn {}
+                                    ;
+
+paramfield_decl_list_comma : paramfield_decl {}
+                           | paramfield_decl KW_COMMA paramfield_decl_list_comma {}
+                           ;
+
+paramfield_decl_list_semicolumn : paramfield_decl {}
+                                | paramfield_decl KW_SEMICOLUMN paramfield_decl_list_semicolumn {}
+                                ;
+
+opt_stmt_list : /* empty */ {}
+              | stmt_list {}
+              ;
+
+stmt_list : stmt {}
+          | stmt KW_SEMICOLUMN stmt_list {}
+          ;
+
+exp : exp log_op exp {}
+    | OP_NOT exp {}
+    | exp rel_op exp {}
+    | exp arith_op exp {}
+    | literal {}
+    | call_stmt {}
+    | KW_NEW ID {}
+    | var {}
+    | ref_var {}
+    | deref_var {}
+    | OPEN_PAREN exp CLOSE_PAREN {}
+    ;
+
+ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN {}
+
+deref_var : KW_DEREF OPEN_PAREN KW_VAR CLOSE_PAREN {}
+          | KW_DEREF OPEN_PAREN deref_var CLOSE_PAREN {}
+          ;
+
+var : ID {}
+    | exp KW_DOT ID {}
+    ;
+
+log_op : OP_AND {}
+       | OP_OR {}
+       ;
+
+rel_op : OP_SMALLER {}
+       | OP_SMALLER_OR_EQ {}
+       | OP_GREATER {}
+       | OP_GREATER_OR_EQ {}
+       | OP_EQUAL {}
+       | OP_NOT_EQUAL {}
+       ;
+
+arith_op : OP_ADD {}
+         | OP_SUB {}
+         | OP_MULT {}
+         | OP_DIV {}
+         | OP_EXP {}
+         ;
+
+literal : FLOAT_LITERAL {}
+        | INT_LITERAL {}
+        | STRING_LITERAL {}
+        | bool_literal {}
+        | KW_NULL {}
+        ;
+
+bool_literal : KW_TRUE {}
+             | KW_FALSE {}
+             ;
+
+stmt : assign_stmt {}
+     | if_stmt {}
+     | while_stmt {} 
+     | return_stmt {}
+     | call_stmt {}
+     ;
+
+assign_stmt : KW_VAR OP_ASSIGN exp {}
+            | deref_var OP_ASSIGN exp {}
+            ;
+
+opt_else_stmt : /* empty */ {}
+              | KW_ELSE opt_stmt_list {}
+              ;
+
+if_stmt : KW_IF exp KW_THEN opt_stmt_list opt_else_stmt KW_FI {}
+        ;
+
+while_stmt : KW_WHILE exp KW_DO opt_stmt_list KW_OD {}
+           ;
+
+return_stmt : KW_RETURN exp {}
+            ;
+
+opt_exp_list : /* empty */ {}
+             | exp_list {}
+             ;
+
+exp_list : exp {}
+         | exp KW_COMMA exp_list {}
+
+call_stmt : ID OPEN_PAREN opt_exp_list CLOSE_PAREN {}
+          ;
+
+type : KW_FLOAT {}
+     | KW_INT {}
+     | KW_STRING {}
+     | KW_BOOL {}
+     | ID {}
+     | KW_REF OPEN_PAREN type CLOSE_PAREN {}
+     ;
 
 %%
