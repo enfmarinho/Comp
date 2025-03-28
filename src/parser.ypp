@@ -4,9 +4,11 @@
 #include <cstdio>
 
 extern int yylex();
+extern int curr_line;
+extern int curr_column;
 
 void yyerror(char *s) {
-    fprintf(stderr, "line ?: %s", s);
+    fprintf(stderr, "error at line %i and column %i: %s", curr_line, curr_column, s);
 }
 
 %}
@@ -183,7 +185,7 @@ exp : exp log_op exp %prec OP_AND {}
 
 ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN {}
 
-deref_var : KW_DEREF OPEN_PAREN KW_VAR CLOSE_PAREN {}
+deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN {}
           | KW_DEREF OPEN_PAREN deref_var CLOSE_PAREN {}
           ;
 
