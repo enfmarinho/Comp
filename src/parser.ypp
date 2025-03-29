@@ -8,7 +8,7 @@ extern int curr_line;
 extern int curr_column;
 
 void yyerror(char *s) {
-    fprintf(stderr, "error at line %i and column %i: %s", curr_line, curr_column, s);
+    fprintf(stderr, "at line %i and column %i: %s\n", curr_line, curr_column, s);
 }
 
 %}
@@ -230,7 +230,7 @@ stmt : assign_stmt {}
      | call_stmt {}
      ;
 
-assign_stmt : KW_VAR OP_ASSIGN exp {}
+assign_stmt : var OP_ASSIGN exp {}
             | deref_var OP_ASSIGN exp {}
             ;
 
