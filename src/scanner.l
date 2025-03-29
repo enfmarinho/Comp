@@ -30,24 +30,36 @@ STRING_LITERAL \".*\"
  // Comment stuff
 "//" {
     printf("start comment\n");
+    curr_column += yyleng;
     BEGIN(COMMENT);
 }
 <COMMENT>. {
+    curr_column += yyleng;
     // Ignore every character in the comment
 }
 <COMMENT>"\n" {
     printf("finished comment\n");
+    ++curr_line;
+    curr_column = 0;
     BEGIN(INITIAL);
 }
 "/*" {
     printf("start multi-line comment\n");
+    curr_column += yyleng;
     BEGIN(MULTILINE_COMMENT);
 }
-<MULTILINE_COMMENT>.|"\n" {
+<MULTILINE_COMMENT>"\n" {
+    // Ignore line jumps
+    ++curr_line;
+    curr_column = 0;
+}
+<MULTILINE_COMMENT>. {
     // Ignore every character
+    curr_column += yyleng;
 }
 <MULTILINE_COMMENT>"*/" {
     printf("finished multi-line comment\n");
+    curr_column += yyleng;
     BEGIN(INITIAL);
 }
 
@@ -71,7 +83,7 @@ STRING_LITERAL \".*\"
 } 
 {STRING_LITERAL} {
     yylval.string_value.value = new char[yyleng + 1];
-   strcpy(yylval.string_value.value, yytext);
+    strcpy(yylval.string_value.value, yytext);
     yylval.string_value.line = curr_line;
     yylval.string_value.column = curr_column;
     curr_column += yyleng;
