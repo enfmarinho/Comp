@@ -136,8 +136,8 @@ proc_decl : KW_PROCEDURE ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PARE
                 proc_body KW_END {}
           ; 
 
-proc_body : stmt_list 
-          | decl_list KW_IN stmt_list
+proc_body : opt_stmt_list
+          | opt_decl_list KW_IN opt_stmt_list
           ;
 
 rec_decl : KW_STRUCT ID OPEN_CURLY opt_paramfield_decl_list_semicolumn CLOSE_CURLY {}
