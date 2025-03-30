@@ -85,8 +85,6 @@ void yyerror(char *s) {
 %token <general_values> OP_NOT_EQUAL
 %token <general_values> OPEN_PAREN
 %token <general_values> CLOSE_PAREN
-%token <general_values> OPEN_BRACKET
-%token <general_values> CLOSE_BRACKET
 %token <general_values> OPEN_CURLY
 %token <general_values> CLOSE_CURLY
 

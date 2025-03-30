@@ -321,16 +321,6 @@ not {
     printf("CLOSE_PAREN \n");
     return CLOSE_PAREN;
 } 
-"[" {
-    update_trivial_info();
-    printf("OPEN_BRACKET \n");
-    return OPEN_BRACKET;
-} 
-"]" {
-    update_trivial_info();
-    printf("CLOSE_BRACKET \n");
-    return CLOSE_BRACKET;
-} 
 "{" {
     update_trivial_info();
     printf("OPEN_CURLY \n");
