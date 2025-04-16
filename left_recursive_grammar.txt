@@ -115,10 +115,7 @@ FIM_EXP ::= not FIM_EXP
 
 REF_VAR ::= ref ( VAR )
 
-DEREF_VAR ::= deref ( T_DEREF_VAR
-
-T_DEREF_VAR ::= VAR )
-T_DEREF_VAR ::= DEREF_VAR )
+DEREF_VAR ::= deref ( VAR )
 
 VAR ::= NAME
 VAR ::= REC_VAR . NAME
