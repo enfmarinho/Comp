@@ -1,32 +1,32 @@
-PROGRAM ::= program NAME begin T_PROGRAM end
+PROGRAM ::= kw_program id kw_begin T_PROGRAM kw_end
 
 T_PROGRAM ::= DECL U_PROGRAM
 T_PROGRAM ::= ''
 
-U_PROGRAM ::= ; DECL U_PROGRAM
+U_PROGRAM ::= kw_semicolumn DECL U_PROGRAM
 U_PROGRAM ::= ''
 
 DECL ::= VAR_DECL
 DECL ::= PROC_DECL
 DECL ::= REC_DECL
 
-VAR_DECL ::= var NAME T_VAR_DECL
+VAR_DECL ::= kw_var id T_VAR_DECL
 
-T_VAR_DECL ::= : TYPE U_VAR_DECL
-T_VAR_DECL ::= := EXP
+T_VAR_DECL ::= kw_column TYPE U_VAR_DECL
+T_VAR_DECL ::= op_assign EXP
 
-U_VAR_DECL ::= := EXP
+U_VAR_DECL ::= op_assign EXP
 U_VAR_DECL ::= ''
 
-PROC_DECL ::= procedure NAME ( T_PROC_DECL ) U_PROC_DECL begin V_PROC_DECL STMT_LIST end
+PROC_DECL ::= kw_procedure id open_paren T_PROC_DECL close_paren U_PROC_DECL kw_begin V_PROC_DECL STMT_LIST kw_end
 
 T_PROC_DECL ::= PARAMFIELD_DECL X_PROC_DECL
 T_PROC_DECL ::= ''
 
-X_PROC_DECL ::= , PARAMFIELD_DECL X_PROC_DECL
+X_PROC_DECL ::= kw_comma PARAMFIELD_DECL X_PROC_DECL
 X_PROC_DECL ::= ''
 
-U_PROC_DECL ::= : TYPE
+U_PROC_DECL ::= kw_column TYPE
 U_PROC_DECL ::= ''
 
 V_PROC_DECL ::= Y_PROC_DECL in
@@ -35,147 +35,147 @@ V_PROC_DECL ::= ''
 Y_PROC_DECL ::= DECL Z_PROC_DECL
 Y_PROC_DECL ::= ''
 
-Z_PROC_DECL ::= ; DECL Z_PROC_DECL
+Z_PROC_DECL ::= kw_semicolumn DECL Z_PROC_DECL
 Z_PROC_DECL ::= ''
 
-REC_DECL ::= struct NAME { T_REC_DECL }
+REC_DECL ::= kw_struct id open_curly T_REC_DECL close_curly
 
 T_REC_DECL ::= PARAMFIELD_DECL U_REC_DECL
 T_REC_DECL ::= ''
 
-U_REC_DECL ::= ; PARAMFIELD_DECL U_REC_DECL
+U_REC_DECL ::= kw_semicolumn PARAMFIELD_DECL U_REC_DECL
 U_REC_DECL ::= ''
 
-PARAMFIELD_DECL ::= NAME : TYPE
+PARAMFIELD_DECL ::= id kw_column TYPE
 
 STMT_LIST ::= STMT T_STMT_LIST
 STMT_LIST ::= ''
 
-T_STMT_LIST ::= ; STMT
+T_STMT_LIST ::= kw_semicolumn STMT
 T_STMT_LIST ::= ''
 
 EXP ::= T_EXP
-EXP ::= not EXP
+EXP ::= op_not EXP
 EXP ::= LITERAL
 EXP ::= CALL_STMT
-EXP ::= new NAME
+EXP ::= kw_new id
 EXP ::= VAR
 EXP ::= REF_VAR
 EXP ::= DEREF_VAR
-EXP ::= NAME NAME_EXP
+EXP ::= id NAME_EXP
 NAME_EXP ::= NAME_CALL_STMT
 NAME_EXP ::= ''
 
-EXP ::= ( EXP )
+EXP ::= open_paren EXP close_paren
 
 T_EXP ::= PREC_EXP EXP
 
 PREC_EXP ::= L_EXP
 
 L_EXP ::= LU_EXP L2_EXP
-L2_EXP ::= || LU_EXP L2_EXP
+L2_EXP ::= op_or LU_EXP L2_EXP
 L2_EXP ::= ''
 
 LU_EXP ::= R_EXP LU2_EXP
-LU2_EXP ::= && R_EXP LU2_EXP
+LU2_EXP ::= op_and R_EXP LU2_EXP
 LU2_EXP ::= ''
 
 R_EXP ::= A_EXP R2_EXP
-R2_EXP ::= < A_EXP R2_EXP
-R2_EXP ::= <= A_EXP R2_EXP
-R2_EXP ::= > A_EXP R2_EXP
-R2_EXP ::= >= A_EXP R2_EXP
-R2_EXP ::= = A_EXP R2_EXP
-R2_EXP ::= <> A_EXP R2_EXP
+R2_EXP ::= op_smaller A_EXP R2_EXP
+R2_EXP ::= op_smaller_or_eq A_EXP R2_EXP
+R2_EXP ::= op_greater A_EXP R2_EXP
+R2_EXP ::= op_greater_or_eq A_EXP R2_EXP
+R2_EXP ::= op_equal A_EXP R2_EXP
+R2_EXP ::= op_not_equal A_EXP R2_EXP
 R2_EXP ::= ''
 
 A_EXP ::= AU_EXP A2_EXP
-A2_EXP ::= + AU_EXP A2_EXP
-A2_EXP ::= - AU_EXP A2_EXP
+A2_EXP ::= op_add AU_EXP A2_EXP
+A2_EXP ::= op_sub AU_EXP A2_EXP
 A2_EXP ::= ''
 
 AU_EXP ::= POW_EXP AU2_EXP
-AU2_EXP ::= * POW_EXP AU2_EXP
-AU2_EXP ::= / POW_EXP AU2_EXP
+AU2_EXP ::= op_mult POW_EXP AU2_EXP
+AU2_EXP ::= op_div POW_EXP AU2_EXP
 AU2_EXP ::= ''
 
 POW_EXP ::= PT_EXP POW_EXP2
-POW_EXP2 ::= ^ POW_EXP
+POW_EXP2 ::= op_exp POW_EXP
 POW_EXP2 ::= ''
 
 PT_EXP ::= FIM_EXP PT2_EXP
-PT2_EXP ::= . FIM_EXP PT2_EXP
+PT2_EXP ::= kw_dot FIM_EXP PT2_EXP
 PT2_EXP ::= ''
 
-FIM_EXP ::= ( PREC_EXP )
+FIM_EXP ::= open_paren PREC_EXP close_paren
 FIM_EXP ::= VAR
 FIM_EXP ::= LITERAL
-FIM_EXP ::= not FIM_EXP
+FIM_EXP ::= op_not FIM_EXP
 
 
-REF_VAR ::= ref ( VAR )
+REF_VAR ::= kw_ref open_paren VAR close_paren
 
 # TODODEREF_VAR não ta igual a definição da grámatica, lá, 
 # deref(DEREF_VAR) é valido, porém, por não fazer sentido
 # prático, não foi implementado
-DEREF_VAR ::= deref ( VAR )
+DEREF_VAR ::= kw_deref open_paren VAR close_paren
 
 VAR ::= NAMELESS_VAR
-VAR ::= NAME NAME_VAR
+VAR ::= id NAME_VAR
 NAME_VAR ::= OPT_CALL_STMT_DOT_NAME
-NAMELESS_VAR ::= DEREF_VAR . NAME
+NAMELESS_VAR ::= DEREF_VAR kw_dot id
 OPT_CALL_STMT_DOT_NAME ::= ''
-OPT_CALL_STMT_DOT_NAME ::= NAME_CALL_STMT . NAME
+OPT_CALL_STMT_DOT_NAME ::= NAME_CALL_STMT kw_dot id
 
 LITERAL ::= FLOAT_LITERAL
 LITERAL ::= INT_LITERAL
 LITERAL ::= STRING_LITERAL
 LITERAL ::= BOOL_LITERAL
-LITERAL ::= null
+LITERAL ::= kw_null
 
-BOOL_LITERAL ::= false
-BOOL_LITERAL ::= true
+BOOL_LITERAL ::= kw_false
+BOOL_LITERAL ::= kw_true
 
 STMT ::= IF_STMT
 STMT ::= WHILE_STMT
 STMT ::= RETURN_STMT
 STMT ::= NAMELESS_ASSIGN_STMT
-STMT ::= NAME NAME_STMT
-NAME_STMT ::= := EXP
+STMT ::= id NAME_STMT
+NAME_STMT ::= op_assign EXP
 NAME_STMT ::= NAME_CALL_STMT OPT_DOT_NAME_ASSIGN_EXP
-OPT_DOT_NAME_ASSIGN_EXP := . NAME := EXP
-OPT_DOT_NAME_ASSIGN_EXP := ''
+OPT_DOT_NAME_ASSIGN_EXP ::= kw_dot id op_assign EXP
+OPT_DOT_NAME_ASSIGN_EXP ::= ''
 
-ASSIGN_STMT ::= NAME NAME_ASSIGN_STMT
+ASSIGN_STMT ::= id NAME_ASSIGN_STMT
 ASSIGN_STMT ::= NAMELESS_ASSIGN_STMT 
 
-NAME_ASSIGN_STMT ::= NAME_VAR := EXP
-NAMELESS_ASSIGN_STMT ::= DEREF_VAR OPT_DOT_NAME := EXP
+NAME_ASSIGN_STMT ::= NAME_VAR op_assign EXP
+NAMELESS_ASSIGN_STMT ::= DEREF_VAR OPT_DOT_NAME op_assign EXP
 
 OPT_DOT_NAME ::= ''
-OPT_DOT_NAME ::= . NAME 
+OPT_DOT_NAME ::= kw_dot id 
 
-IF_STMT ::= if EXP then STMT_LIST T_IF_STMT fi
+IF_STMT ::= kw_if EXP kw_then STMT_LIST T_IF_STMT kw_fi
 
-T_IF_STMT ::= else STMT_LIST
+T_IF_STMT ::= kw_else STMT_LIST
 T_IF_STMT ::= ''
 
-WHILE_STMT ::= while EXP do STMT_LIST od
+WHILE_STMT ::= kw_while EXP kw_do STMT_LIST kw_od
 
-RETURN_STMT ::= return EXP
+RETURN_STMT ::= kw_return EXP
 
-CALL_STMT ::= NAME NAME_CALL_STMT
-NAME_CALL_STMT ::= ( T_CALL_STMT )
+CALL_STMT ::= id NAME_CALL_STMT
+NAME_CALL_STMT ::= open_paren T_CALL_STMT close_paren
 
 T_CALL_STMT ::= EXP U_CALL_STMT
 T_CALL_STMT ::= ''
 
-U_CALL_STMT ::= , EXP U_CALL_STMT
+U_CALL_STMT ::= kw_comma EXP U_CALL_STMT
 U_CALL_STMT ::= ''
 
-TYPE ::= float
-TYPE ::= int
-TYPE ::= string
-TYPE ::= bool
-TYPE ::= NAME
-TYPE ::= ref ( TYPE )
+TYPE ::= kw_float
+TYPE ::= kw_int
+TYPE ::= kw_string
+TYPE ::= kw_bool
+TYPE ::= id
+TYPE ::= kw_ref open_paren TYPE close_paren
