@@ -57,14 +57,20 @@ T_STMT_LIST ::= ''
 EXP ::= T_EXP
 EXP ::= op_not EXP
 EXP ::= LITERAL
-EXP ::= CALL_STMT
 EXP ::= kw_new id
-EXP ::= VAR
 EXP ::= REF_VAR
-EXP ::= DEREF_VAR
-EXP ::= id NAME_EXP
-NAME_EXP ::= NAME_CALL_STMT
-NAME_EXP ::= ''
+
+# This is for solving the conflict between NAMELESS_DEREF_VAR and DEREF_VAR
+EXP ::= DEREF_VAR OPT_NAMELESS_VAR
+OPT_NAMELESS_VAR ::= NAMELESS_DEREF_VAR
+OPT_NAMELESS_VAR ::= ''
+
+EXP ::= id OPT_NAME_EXP
+OPT_NAME_EXP ::= NAME_CALL_STMT OPT_NAME_VAR
+OPT_NAME_EXP ::= ''
+
+OPT_NAME_VAR ::= ''
+OPT_NAME_VAR ::= kw_dot id
 
 EXP ::= open_paren EXP close_paren
 
@@ -129,6 +135,7 @@ VAR ::= id NAME_VAR
 NAME_VAR ::= ''
 NAME_VAR ::= NAME_CALL_STMT kw_dot id
 NAMELESS_VAR ::= DEREF_VAR kw_dot id
+NAMELESS_DEREF_VAR ::= kw_dot id
 
 LITERAL ::= FLOAT_LITERAL
 LITERAL ::= INT_LITERAL
