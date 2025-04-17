@@ -60,9 +60,9 @@ EXP ::= LITERAL
 EXP ::= kw_new id
 EXP ::= REF_VAR
 
-# This is for solving the conflict between NAMELESS_DEREF_VAR and DEREF_VAR
+# This is for solving the conflict between NAMELESS_DEREF_VAR_VAR and DEREF_VAR
 EXP ::= DEREF_VAR OPT_NAMELESS_VAR
-OPT_NAMELESS_VAR ::= NAMELESS_DEREF_VAR
+OPT_NAMELESS_VAR ::= NAMELESS_DEREF_VAR_VAR
 OPT_NAMELESS_VAR ::= ''
 
 EXP ::= id OPT_NAME_EXP
@@ -126,16 +126,15 @@ REF_VAR ::= kw_ref open_paren VAR close_paren
 # prático, não foi implementado
 DEREF_VAR ::= kw_deref open_paren VAR close_paren
 
-# TODO VAR não está igual a definicão da gramática devido ao
-# não uso de EXP, por consequência parênteses envolta de CALL_STMT
-# ou DEREF_VAR não são válidas para VAR, que, de acordo com a gramática
-# seria pois (EXP) é equivalente a EXP
+VAR ::= open_paren PAREN_VAR
+PAREN_VAR ::= DEREF_VAR kw_dot id close_paren
+PAREN_VAR ::= CALL_STMT kw_dot id close_paren
 VAR ::= NAMELESS_VAR
 VAR ::= id NAME_VAR
 NAME_VAR ::= ''
 NAME_VAR ::= NAME_CALL_STMT kw_dot id
 NAMELESS_VAR ::= DEREF_VAR kw_dot id
-NAMELESS_DEREF_VAR ::= kw_dot id
+NAMELESS_DEREF_VAR_VAR ::= kw_dot id
 
 LITERAL ::= FLOAT_LITERAL
 LITERAL ::= INT_LITERAL
