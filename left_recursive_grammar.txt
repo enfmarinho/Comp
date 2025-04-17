@@ -114,7 +114,8 @@ PT2_EXP ::= kw_dot FIM_EXP PT2_EXP
 PT2_EXP ::= ''
 
 FIM_EXP ::= open_paren PREC_EXP close_paren
-FIM_EXP ::= VAR
+# TODO Ideally this should be VAR and not NO_PAREN_VAR, something to fix in the future
+FIM_EXP ::= NO_PAREN_VAR
 FIM_EXP ::= LITERAL
 FIM_EXP ::= op_not FIM_EXP
 
@@ -135,6 +136,8 @@ NAME_VAR ::= ''
 NAME_VAR ::= NAME_CALL_STMT kw_dot id
 NAMELESS_VAR ::= DEREF_VAR kw_dot id
 NAMELESS_DEREF_VAR_VAR ::= kw_dot id
+NO_PAREN_VAR ::= NAMELESS_VAR
+NO_PAREN_VAR ::= id NAME_VAR
 
 LITERAL ::= FLOAT_LITERAL
 LITERAL ::= INT_LITERAL
