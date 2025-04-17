@@ -124,8 +124,7 @@ REF_VAR ::= kw_ref open_paren VAR close_paren
 # prático, não foi implementado
 DEREF_VAR ::= kw_deref open_paren VAR close_paren
 
-VAR ::= START_REC_VAR
-START_REC_VAR ::= open_paren REC_VAR close_paren
+VAR ::= open_paren REC_VAR close_paren
 REC_VAR ::= open_paren REC_VAR close_paren
 REC_VAR ::= DEREF_VAR kw_dot id
 REC_VAR ::= CALL_STMT kw_dot id
