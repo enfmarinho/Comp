@@ -115,11 +115,15 @@ FIM_EXP ::= op_not FIM_EXP
 
 REF_VAR ::= kw_ref open_paren VAR close_paren
 
-# TODODEREF_VAR não ta igual a definição da grámatica, lá, 
+# TODO DEREF_VAR não ta igual a definição da grámatica, lá, 
 # deref(DEREF_VAR) é valido, porém, por não fazer sentido
 # prático, não foi implementado
 DEREF_VAR ::= kw_deref open_paren VAR close_paren
 
+# TODO VAR não está igual a definicão da gramática devido ao
+# não uso de EXP, por consequência parênteses envolta de CALL_STMT
+# ou DEREF_VAR não são válidas para VAR, que, de acordo com a gramática
+# seria pois (EXP) é equivalente a EXP
 VAR ::= NAMELESS_VAR
 VAR ::= id NAME_VAR
 NAME_VAR ::= OPT_CALL_STMT_DOT_NAME
