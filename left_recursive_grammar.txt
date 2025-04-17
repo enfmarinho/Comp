@@ -126,10 +126,9 @@ DEREF_VAR ::= kw_deref open_paren VAR close_paren
 # seria pois (EXP) é equivalente a EXP
 VAR ::= NAMELESS_VAR
 VAR ::= id NAME_VAR
-NAME_VAR ::= OPT_CALL_STMT_DOT_NAME
+NAME_VAR ::= ''
+NAME_VAR ::= NAME_CALL_STMT kw_dot id
 NAMELESS_VAR ::= DEREF_VAR kw_dot id
-OPT_CALL_STMT_DOT_NAME ::= ''
-OPT_CALL_STMT_DOT_NAME ::= NAME_CALL_STMT kw_dot id
 
 LITERAL ::= FLOAT_LITERAL
 LITERAL ::= INT_LITERAL
