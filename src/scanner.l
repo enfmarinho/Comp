@@ -236,6 +236,16 @@ null {
     printf("KW_DOT\n");
     return KW_DOT;
 } 
+exit {
+    update_trivial_info();
+    printf("KW_EXIT\n");
+    return KW_EXIT;
+}
+when {
+    update_trivial_info();
+    printf("KW_WHEN\n");
+    return KW_WHEN;
+}
 ":=" {
     update_trivial_info();
     printf("OP_ASSIGN\n");
