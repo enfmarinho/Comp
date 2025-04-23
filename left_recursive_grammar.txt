@@ -56,7 +56,6 @@ T_STMT_LIST ::= ''
 
 EXP ::= T_EXP
 EXP ::= op_not EXP
-EXP ::= LITERAL
 EXP ::= kw_new id
 EXP ::= REF_VAR
 
