@@ -35,7 +35,7 @@ V_PROC_DECL ::= ''
 Y_PROC_DECL ::= DECL Z_PROC_DECL
 Y_PROC_DECL ::= ''
 
-Z_PROC_DECL ::= kw_semicolumn DECL Z_PROC_DECL
+Z_PROC_DECL ::= kw_semicolumn Y_PROC_DECL
 Z_PROC_DECL ::= ''
 
 REC_DECL ::= kw_struct id open_curly T_REC_DECL close_curly
@@ -51,7 +51,7 @@ PARAMFIELD_DECL ::= id kw_column TYPE
 STMT_LIST ::= STMT T_STMT_LIST
 STMT_LIST ::= ''
 
-T_STMT_LIST ::= kw_semicolumn STMT T_STMT_LIST
+T_STMT_LIST ::= kw_semicolumn STMT_LIST
 T_STMT_LIST ::= ''
 
 OPT_EXP ::= EXP
