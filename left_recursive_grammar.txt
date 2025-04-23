@@ -125,10 +125,10 @@ NAMELESS_DEREF_VAR_VAR ::= kw_dot id
 NO_PAREN_VAR ::= NAMELESS_VAR
 NO_PAREN_VAR ::= id NAME_VAR
 
-LITERAL ::= FLOAT_LITERAL
-LITERAL ::= INT_LITERAL
-LITERAL ::= STRING_LITERAL
-LITERAL ::= BOOL_LITERAL
+LITERAL ::= float_literal
+LITERAL ::= int_literal
+LITERAL ::= string_literal
+LITERAL ::= bool_literal
 LITERAL ::= kw_null
 
 BOOL_LITERAL ::= kw_false
