@@ -68,8 +68,6 @@ EXP ::= id OPT_NAME_EXP
 OPT_NAME_EXP ::= NAME_CALL_STMT OPT_DOT_NAME
 OPT_NAME_EXP ::= ''
 
-EXP ::= open_paren EXP close_paren
-
 T_EXP ::= PREC_EXP EXP
 
 PREC_EXP ::= L_EXP
@@ -109,11 +107,11 @@ PT_EXP ::= FIM_EXP PT2_EXP
 PT2_EXP ::= kw_dot FIM_EXP PT2_EXP
 PT2_EXP ::= ''
 
-FIM_EXP ::= open_paren PREC_EXP close_paren
 # TODO Ideally this should be VAR and not NO_PAREN_VAR, something to fix in the future
 FIM_EXP ::= NO_PAREN_VAR
 FIM_EXP ::= LITERAL
 FIM_EXP ::= op_not FIM_EXP
+FIM_EXP ::= open_paren EXP close_paren
 
 
 REF_VAR ::= kw_ref open_paren VAR close_paren
