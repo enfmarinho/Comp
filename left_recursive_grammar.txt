@@ -87,13 +87,9 @@ AU2_EXP ::= op_mult POW_EXP AU2_EXP
 AU2_EXP ::= op_div POW_EXP AU2_EXP
 AU2_EXP ::= ''
 
-POW_EXP ::= PT_EXP POW_EXP2
+POW_EXP ::= FIM_EXP POW_EXP2
 POW_EXP2 ::= op_exp POW_EXP
 POW_EXP2 ::= ''
-
-PT_EXP ::= FIM_EXP PT2_EXP
-PT2_EXP ::= kw_dot FIM_EXP PT2_EXP
-PT2_EXP ::= ''
 
 # TODO Ideally this should be VAR and not NO_PAREN_VAR, something to fix in the future
 FIM_EXP ::= LITERAL
