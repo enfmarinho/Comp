@@ -68,6 +68,8 @@ void yyerror(char *s) {
 %token <general_values> KW_COLUMN
 %token <general_values> KW_COMMA
 %token <general_values> KW_DOT
+%token <general_values> KW_EXIT
+%token <general_values> KW_WHEN
 %token <general_values> OP_ADD
 %token <general_values> OP_SUB
 %token <general_values> OP_MULT
@@ -226,6 +228,7 @@ stmt : assign_stmt {}
      | while_stmt {} 
      | return_stmt {}
      | call_stmt {}
+     | do_while_stmt {}
      ;
 
 assign_stmt : var OP_ASSIGN exp {}
@@ -254,6 +257,18 @@ exp_list : exp {}
 
 call_stmt : ID OPEN_PAREN opt_exp_list CLOSE_PAREN {}
           ;
+
+do_while_stmt : KW_DO do_while_opt_stmt_list KW_OD {}
+              ;
+
+do_while_opt_stmt_list : /* empty */ {}
+                       | if_stmt {}
+                       | assign_stmt {}
+                       | return_stmt {}
+                       | call_stmt {}
+                       | do_while_stmt {}
+                       | KW_EXIT KW_WHEN exp {}
+                       ;
 
 type : KW_FLOAT {}
      | KW_INT {}
