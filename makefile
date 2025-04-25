@@ -1,6 +1,6 @@
 # Tools
 CXX = clang++
-YACC = yacc
+YACC = bison
 LEX = flex
 
 # Flags settings
