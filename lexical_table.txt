@@ -31,6 +31,8 @@
 | false                                                            | KW_FALSE       |
 | new                                                              | KW_NEW         |
 | null                                                             | KW_NULL        |
+| exit                                                             | KW_EXIT        |
+| when                                                             | KW_WHEN        |
 | ";"                                                              | KW_SEMICOLUMN  |
 | ":"                                                              | KW_COLUMN      |
 | ","                                                              | KW_COMMA       |
