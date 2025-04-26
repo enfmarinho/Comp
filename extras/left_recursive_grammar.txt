@@ -93,8 +93,7 @@ POW_EXP2 ::= op_exp POW_EXP
 POW_EXP2 ::= ''
 
 FIM_EXP ::= LITERAL
-# TODO checar se o correto é EXP ou FIM_EXP para op_not EXP
-EXP ::= op_not EXP
+FIM_EXP ::= op_not FIM_EXP
 FIM_EXP ::= open_paren EXP close_paren
 
 # This is for solving the conflict between NAMELESS_DEREF_VAR_VAR and DEREF_VAR
