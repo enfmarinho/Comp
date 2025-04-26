@@ -41,12 +41,12 @@ int main(int argc, char *argv[]) {
 }
 
 bool LL(std::stack<SymbolType> &stack) {
-  SymbolType symbol;
+  SymbolType input_symbol;
   bool symbol_read = false;
   bool reached_input_end = false;
 
   while (!stack.empty() && !reached_input_end) {
-    SymbolType top = stack.top();
+    SymbolType top_stack_symbol = stack.top();
     if (!symbol_read) {
       SymbolType symbol = yylex();
       symbol_read = true;
@@ -56,19 +56,19 @@ bool LL(std::stack<SymbolType> &stack) {
       }
     }
 
-    if (is_terminal(top)) {
-      if (top == symbol) {
+    if (is_terminal(top_stack_symbol)) {
+      if (top_stack_symbol == input_symbol) {
         stack.pop();
         symbol_read = false;
       } else {
         error();
         break;
       }
-    } else if (!consult_table(top, symbol)
+    } else if (!consult_table(top_stack_symbol, input_symbol)
                     .empty()) { // If there is a relevant rule associated to the
                                 // non-terminal symbol at the top of the stack
       stack.pop();
-      for (SymbolType t : consult_table(top, symbol)) {
+      for (SymbolType t : consult_table(top_stack_symbol, input_symbol)) {
         if (t != EMPTY) { // Add symbols in table to the stack, except when
                           // symbol is empty
           stack.push(t);
