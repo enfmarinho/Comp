@@ -69,7 +69,8 @@
 #define TYPE 64
 #define NUMBER_OF_NON_TERMINALS                                                \
   65 // Its actually 64, but for coding purposes lets leave it like that
-#define END 66
-#define EMPTY 257
+#define EMPTY 256
+#define END 257
+#define NUMBER_OF_TERMINALS 56
 
 #endif // !NON_TERMINALS_H

@@ -7,12 +7,11 @@
 #include "../build/parser.tab.hpp"
 #include "non_terminals.h"
 
-#define NUMBER_OF_TERMINALS 55
 #define SymbolType int
 
 // Global variables
 YYSTYPE yylval;
-std::vector<SymbolType> Table[NUMBER_OF_NON_TERMINALS][NUMBER_OF_TERMINALS];
+std::vector<SymbolType> table[NUMBER_OF_NON_TERMINALS][NUMBER_OF_TERMINALS];
 
 // Functions signatures
 bool LL(std::stack<SymbolType> &stack);
@@ -20,10 +19,10 @@ std::vector<SymbolType> &consult_table(SymbolType non_terminal,
                                        SymbolType terminal);
 bool is_terminal(SymbolType symbol);
 void error();
-void initialize_table();
+void init_table();
 
 int main(int argc, char *argv[]) {
-  initialize_table();
+  init_table();
 
   std::stack<SymbolType> stack;
   stack.push(END);
@@ -90,7 +89,7 @@ std::vector<SymbolType> &consult_table(SymbolType non_terminal,
          "Try to index Table with an out of bound index");
   assert(terminal >= 0 && terminal <= NUMBER_OF_TERMINALS &&
          "Try to index Table with an out of bound index");
-  return Table[non_terminal][terminal];
+  return table[non_terminal][terminal];
 }
 
 bool is_terminal(SymbolType symbol) { return symbol >= EMPTY; }
@@ -117,6 +116,6 @@ void error(SymbolType symbol) {
             << std::endl;
 }
 
-void initialize_table() {
+void init_table() {
   // TODO
 }
