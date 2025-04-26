@@ -57,11 +57,9 @@ T_STMT_LIST ::= ''
 OPT_EXP ::= EXP
 OPT_EXP ::= ''
 
-EXP ::= PREC_EXP OPT_EXP
+EXP ::= L_EXP OPT_EXP
 EXP ::= kw_new id
 EXP ::= REF_VAR
-
-PREC_EXP ::= L_EXP
 
 L_EXP ::= LU_EXP L2_EXP
 L2_EXP ::= op_or LU_EXP L2_EXP
