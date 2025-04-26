@@ -92,8 +92,8 @@ POW_EXP ::= FIM_EXP POW_EXP2
 POW_EXP2 ::= op_exp POW_EXP
 POW_EXP2 ::= ''
 
-# TODO Ideally this should be VAR and not NO_PAREN_VAR, something to fix in the future
 FIM_EXP ::= LITERAL
+# TODO checar se o correto é EXP ou FIM_EXP para op_not EXP
 EXP ::= op_not EXP
 FIM_EXP ::= open_paren EXP close_paren
 
