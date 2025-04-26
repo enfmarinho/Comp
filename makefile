@@ -59,5 +59,6 @@ $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.cpp $(YACC_HDR)
 
 clean:
 	rm -rf $(BUILD_DIR)/*.o $(YACC_OUT) $(LEX_OUT) $(YACC_HDR) $(YACC_VERBOSE_FILE) $(TARGET)
+	rmdir build
 
 .PHONY: all clean
