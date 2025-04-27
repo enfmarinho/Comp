@@ -69,11 +69,10 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  if (sucessful_parse) {
+  if (sucessful_parse)
     std::cout << "Input belongs to grammar" << std::endl;
-  } else {
+  else
     std::cout << "Input doesn't belong to grammar" << std::endl;
-  }
 
   return 0;
 }
@@ -138,34 +137,31 @@ void init_table() {
 bool LL_rec(std::stack<SymbolType> stack,
             std::queue<SymbolRecInputType> input_symbols) {
 
-  if (stack.empty() || input_symbols.empty()) {
+  if (stack.empty() || input_symbols.empty())
     return stack.empty() && input_symbols.empty();
-  }
 
   auto [curr_input_symbol, curr_yylval] = input_symbols.front();
   SymbolType top_stack_symbol = stack.top();
 
   if (is_terminal(top_stack_symbol)) {
-    if (top_stack_symbol == curr_input_symbol) {
-      stack.pop();
-      input_symbols.pop();
+    stack.pop();
+    input_symbols.pop();
+    if (top_stack_symbol == curr_input_symbol)
       return LL_rec(stack, input_symbols);
-    } else {
+    else
       return false;
-    }
   }
 
   for (const std::vector<SymbolType> &rule : consult_rules(top_stack_symbol)) {
     // Try each of those rules hopping for a match
     std::stack<SymbolType> stack_cp = stack;
     stack_cp.pop();
-    for (int i = rule.size() - 1; i >= 0; --i) {
+    for (int i = rule.size() - 1; i >= 0; --i)
       if (rule[i] != EMPTY)
         stack_cp.push(rule[i]);
-    }
-    if (LL_rec(stack_cp, input_symbols)) {
+
+    if (LL_rec(stack_cp, input_symbols))
       return true;
-    }
   }
 
   if (last_error_symbol == nullptr) {
@@ -469,9 +465,9 @@ SymbolType get_symbol_key(std::string symbol) {
 std::queue<SymbolRecInputType> read_rec_input() {
   std::queue<SymbolRecInputType> input_symbols;
   SymbolType symbol;
-  while ((symbol = yylex()) != 0) {
+  while ((symbol = yylex()) != 0)
     input_symbols.push({symbol, yylval});
-  }
+
   return input_symbols;
 }
 
