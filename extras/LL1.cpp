@@ -195,36 +195,242 @@ void init_rules() {
 SymbolType get_symbol_key(std::string symbol) {
   if (symbol == "PROGRAM")
     return PROGRAM;
+  else if (symbol == "KW_PROGRAM")
+    return KW_PROGRAM;
+  else if (symbol == "ID")
+    return ID;
+  else if (symbol == "KW_BEGIN")
+    return KW_BEGIN;
   else if (symbol == "T_PROGRAM")
     return T_PROGRAM;
-  else if (symbol == "U_PROGRAM")
-    return U_PROGRAM;
+  else if (symbol == "KW_END")
+    return KW_END;
   else if (symbol == "DECL")
     return DECL;
+  else if (symbol == "U_PROGRAM")
+    return U_PROGRAM;
   else if (symbol == "VAR_DECL")
     return VAR_DECL;
-  else if (symbol == "T_VAR_DECL")
-    return T_VAR_DECL;
-  else if (symbol == "U_VAR_DECL")
-    return U_VAR_DECL;
   else if (symbol == "PROC_DECL")
     return PROC_DECL;
+  else if (symbol == "REC_DECL")
+    return REC_DECL;
+  else if (symbol == "KW_VAR")
+    return KW_VAR;
+  else if (symbol == "T_VAR_DECL")
+    return T_VAR_DECL;
+  else if (symbol == "KW_COLUMN")
+    return KW_COLUMN;
+  else if (symbol == "TYPE")
+    return TYPE;
+  else if (symbol == "OP_ASSIGN")
+    return OP_ASSIGN;
+  else if (symbol == "EXP")
+    return EXP;
+  else if (symbol == "U_VAR_DECL")
+    return U_VAR_DECL;
+  else if (symbol == "KW_PROCEDURE")
+    return KW_PROCEDURE;
+  else if (symbol == "OPEN_PAREN")
+    return OPEN_PAREN;
   else if (symbol == "T_PROC_DECL")
     return T_PROC_DECL;
-  else if (symbol == "X_PROC_DECL")
-    return X_PROC_DECL;
+  else if (symbol == "CLOSE_PAREN")
+    return CLOSE_PAREN;
   else if (symbol == "U_PROC_DECL")
     return U_PROC_DECL;
   else if (symbol == "V_PROC_DECL")
     return V_PROC_DECL;
+  else if (symbol == "STMT_LIST")
+    return STMT_LIST;
+  else if (symbol == "PARAMFIELD_DECL")
+    return PARAMFIELD_DECL;
+  else if (symbol == "X_PROC_DECL")
+    return X_PROC_DECL;
+  else if (symbol == "KW_COMMA")
+    return KW_COMMA;
+  else if (symbol == "KW_IN")
+    return KW_IN;
   else if (symbol == "Y_PROC_DECL")
     return Y_PROC_DECL;
   else if (symbol == "Z_PROC_DECL")
     return Z_PROC_DECL;
-  else if (symbol == "REC_DECL")
-    return REC_DECL;
-  else if (symbol ==) // TODO write those the missing symbols
-    return;
+  else if (symbol == "KW_SEMICOLUMN")
+    return KW_SEMICOLUMN;
+  else if (symbol == "KW_STRUCT")
+    return KW_STRUCT;
+  else if (symbol == "OPEN_CURLY")
+    return OPEN_CURLY;
+  else if (symbol == "T_REC_DECL")
+    return T_REC_DECL;
+  else if (symbol == "CLOSE_CURLY")
+    return CLOSE_CURLY;
+  else if (symbol == "U_REC_DECL")
+    return U_REC_DECL;
+  else if (symbol == "T_STMT_LIST")
+    return T_STMT_LIST;
+  else if (symbol == "OPT_EXP")
+    return OPT_EXP;
+  else if (symbol == "L_EXP")
+    return L_EXP;
+  else if (symbol == "KW_NEW")
+    return KW_NEW;
+  else if (symbol == "REF_VAR")
+    return REF_VAR;
+  else if (symbol == "LU_EXP")
+    return LU_EXP;
+  else if (symbol == "L2_EXP")
+    return L2_EXP;
+  else if (symbol == "OP_OR")
+    return OP_OR;
+  else if (symbol == "R_EXP")
+    return R_EXP;
+  else if (symbol == "LU2_EXP")
+    return LU2_EXP;
+  else if (symbol == "OP_AND")
+    return OP_AND;
+  else if (symbol == "A_EXP")
+    return A_EXP;
+  else if (symbol == "R2_EXP")
+    return R2_EXP;
+  else if (symbol == "OP_SMALLER")
+    return OP_SMALLER;
+  else if (symbol == "OP_SMALLER_OR_EQ")
+    return OP_SMALLER_OR_EQ;
+  else if (symbol == "OP_GREATER")
+    return OP_GREATER;
+  else if (symbol == "OP_GREATER_OR_EQ")
+    return OP_GREATER_OR_EQ;
+  else if (symbol == "OP_EQUAL")
+    return OP_EQUAL;
+  else if (symbol == "OP_NOT_EQUAL")
+    return OP_NOT_EQUAL;
+  else if (symbol == "AU_EXP")
+    return AU_EXP;
+  else if (symbol == "A2_EXP")
+    return A2_EXP;
+  else if (symbol == "OP_ADD")
+    return OP_ADD;
+  else if (symbol == "OP_SUB")
+    return OP_SUB;
+  else if (symbol == "POW_EXP")
+    return POW_EXP;
+  else if (symbol == "AU2_EXP")
+    return AU2_EXP;
+  else if (symbol == "OP_MULT")
+    return OP_MULT;
+  else if (symbol == "OP_DIV")
+    return OP_DIV;
+  else if (symbol == "FIM_EXP")
+    return FIM_EXP;
+  else if (symbol == "POW_EXP2")
+    return POW_EXP2;
+  else if (symbol == "OP_EXP")
+    return OP_EXP;
+  else if (symbol == "LITERAL")
+    return LITERAL;
+  else if (symbol == "OP_NOT")
+    return OP_NOT;
+  else if (symbol == "CLOSE_PAREN")
+    return CLOSE_PAREN;
+  else if (symbol == "DEREF_VAR")
+    return DEREF_VAR;
+  else if (symbol == "OPT_DOT_NAME")
+    return OPT_DOT_NAME;
+  else if (symbol == "KW_REF")
+    return KW_REF;
+  else if (symbol == "VAR")
+    return VAR;
+  else if (symbol == "KW_DEREF")
+    return KW_DEREF;
+  else if (symbol == "REC_VAR")
+    return REC_VAR;
+  else if (symbol == "KW_DOT")
+    return KW_DOT;
+  else if (symbol == "CALL_STMT")
+    return CALL_STMT;
+  else if (symbol == "NAMELESS_VAR")
+    return NAMELESS_VAR;
+  else if (symbol == "NAME_VAR")
+    return NAME_VAR;
+  else if (symbol == "NAME_CALL_STMT")
+    return NAME_CALL_STMT;
+  else if (symbol == "NAMELESS_DEREF_VAR_VAR")
+    return NAMELESS_DEREF_VAR_VAR;
+  else if (symbol == "NO_PAREN_VAR")
+    return NO_PAREN_VAR;
+  else if (symbol == "FLOAT_LITERAL")
+    return FLOAT_LITERAL;
+  else if (symbol == "INT_LITERAL")
+    return INT_LITERAL;
+  else if (symbol == "STRING_LITERAL")
+    return STRING_LITERAL;
+  else if (symbol == "BOOL_LITERAL")
+    return BOOL_LITERAL;
+  else if (symbol == "KW_NULL")
+    return KW_NULL;
+  else if (symbol == "KW_FALSE")
+    return KW_FALSE;
+  else if (symbol == "KW_TRUE")
+    return KW_TRUE;
+  else if (symbol == "STMT")
+    return STMT;
+  else if (symbol == "IF_STMT")
+    return IF_STMT;
+  else if (symbol == "WHILE_STMT")
+    return WHILE_STMT;
+  else if (symbol == "RETURN_STMT")
+    return RETURN_STMT;
+  else if (symbol == "NAMELESS_ASSIGN_STMT")
+    return NAMELESS_ASSIGN_STMT;
+  else if (symbol == "DO_STMT")
+    return DO_STMT;
+  else if (symbol == "NAME_STMT")
+    return NAME_STMT;
+  else if (symbol == "NAME_CALL_STMT")
+    return NAME_CALL_STMT;
+  else if (symbol == "OPT_DOT_NAME_ASSIGN_EXP")
+    return OPT_DOT_NAME_ASSIGN_EXP;
+  else if (symbol == "ASSIGN_STMT")
+    return ASSIGN_STMT;
+  else if (symbol == "NAME_ASSIGN_STMT")
+    return NAME_ASSIGN_STMT;
+  else if (symbol == "KW_IF")
+    return KW_IF;
+  else if (symbol == "KW_THEN")
+    return KW_THEN;
+  else if (symbol == "T_IF_STMT")
+    return T_IF_STMT;
+  else if (symbol == "KW_FI")
+    return KW_FI;
+  else if (symbol == "KW_ELSE")
+    return KW_ELSE;
+  else if (symbol == "KW_WHILE")
+    return KW_WHILE;
+  else if (symbol == "KW_DO")
+    return KW_DO;
+  else if (symbol == "KW_OD")
+    return KW_OD;
+  else if (symbol == "KW_RETURN")
+    return KW_RETURN;
+  else if (symbol == "T_CALL_STMT")
+    return T_CALL_STMT;
+  else if (symbol == "U_CALL_STMT")
+    return U_CALL_STMT;
+  else if (symbol == "DO_STMT_LIST")
+    return DO_STMT_LIST;
+  else if (symbol == "KW_EXIT")
+    return KW_EXIT;
+  else if (symbol == "KW_WHEN")
+    return KW_WHEN;
+  else if (symbol == "KW_FLOAT")
+    return KW_FLOAT;
+  else if (symbol == "KW_INT")
+    return KW_INT;
+  else if (symbol == "KW_STRING")
+    return KW_STRING;
+  else if (symbol == "KW_BOOL")
+    return KW_BOOL;
   else {
     assert(false && "Trying to get a key for an invalid symbol");
   }
