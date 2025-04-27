@@ -25,7 +25,6 @@
 #define T_STMT_LIST 20
 #define OPT_EXP 21
 #define EXP 22
-#define PREC_EXP 23
 #define L_EXP 24
 #define L2_EXP 25
 #define LU_EXP 26
