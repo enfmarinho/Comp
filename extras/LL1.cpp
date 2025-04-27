@@ -155,8 +155,8 @@ bool LL_rec(std::stack<SymbolType> stack,
     // Try each of those rules hopping for a match
     std::stack<SymbolType> stack_cp = stack;
     stack_cp.pop();
-    for (SymbolType s : rule) {
-      stack_cp.push(s);
+    for (int i = rule.size() - 1; i >= 0; --i) {
+      stack_cp.push(rule[i]);
     }
     if (LL_rec(stack_cp, input_symbols)) {
       return true;
