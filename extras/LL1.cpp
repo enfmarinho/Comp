@@ -17,6 +17,8 @@
 
 // Global variables
 YYSTYPE yylval; // Used be Flex
+YYSTYPE *last_error_yylval = nullptr;
+SymbolType *last_error_symbol = nullptr;
 std::vector<SymbolType> table[NUMBER_OF_NON_TERMINALS][NUMBER_OF_TERMINALS];
 
 // 1d for the non-terminal symbols, 2d for each rule of the symbol, 3d for each
@@ -60,6 +62,8 @@ int main(int argc, char *argv[]) {
     init_rules();
     std::queue<SymbolRecInputType> input_symbols = read_rec_input();
     sucessful_parse = LL_rec(stack, input_symbols);
+    if (!sucessful_parse)
+      error(*last_error_symbol, *last_error_yylval);
   } else {
     print_usage();
     return 1;
@@ -156,13 +160,21 @@ bool LL_rec(std::stack<SymbolType> stack,
     std::stack<SymbolType> stack_cp = stack;
     stack_cp.pop();
     for (int i = rule.size() - 1; i >= 0; --i) {
-      stack_cp.push(rule[i]);
+      if (rule[i] != EMPTY)
+        stack_cp.push(rule[i]);
     }
     if (LL_rec(stack_cp, input_symbols)) {
       return true;
     }
   }
-  error(curr_input_symbol, curr_yylval);
+
+  if (last_error_symbol == nullptr) {
+    last_error_symbol = new SymbolType;
+    last_error_yylval = new YYSTYPE;
+  }
+  *last_error_yylval = curr_yylval;
+  *last_error_symbol = curr_input_symbol;
+
   return false;
 }
 
@@ -483,7 +495,7 @@ void error(SymbolType symbol, const YYSTYPE &input_yylval) {
     line = input_yylval.general_values.line;
     column = input_yylval.general_values.column;
   }
-  std::cout << "Error at line " << line << "and at column " << column
+  std::cout << "Error at line " << line << " and at column " << column
             << std::endl;
 }
 
