@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
   } else if (std::strcmp(argv[1], "-rec") == 0) {
     init_rules();
     std::queue<SymbolRecInputType> input_symbols = read_rec_input();
+    input_symbols.push({END, YYSTYPE()});
     sucessful_parse = LL_rec(stack, input_symbols);
     if (!sucessful_parse)
       error(*last_error_symbol, *last_error_yylval);
