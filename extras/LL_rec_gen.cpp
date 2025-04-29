@@ -3,6 +3,8 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -46,7 +48,44 @@ int main(int argc, char *argv[]) {
 }
 
 void read_file(std::ifstream &file_in) {
-  // TODO
+  std::string line, token;
+  std::getline(file_in, line);
+  std::stringstream iss(line);
+
+  std::vector<std::string> terminal_symbols;
+  while (std::getline(iss, token, ',')) {
+    assert(!token.empty());
+    terminal_symbols.push_back(token);
+  }
+
+  while (!file_in.eof()) {
+    std::getline(file_in, line);
+    iss.str(line);
+    std::string non_terminal_symbol, table_value;
+    std::getline(iss, non_terminal_symbol, ',');
+
+    auto line_it = table.find(non_terminal_symbol);
+    for (int i = 0; i < terminal_symbols.size(); ++i) {
+
+      std::getline(iss, table_value, ',');
+      if (table_value.empty())
+        continue;
+
+      auto column_it = line_it->second.find(terminal_symbols[i]);
+      std::istringstream iss2(table_value);
+      iss2 >> token;
+      assert(token == non_terminal_symbol);
+      iss2 >> token;
+      assert(token == "::=");
+
+      while (iss2 >> token) {
+        if (token == "ε") // TODO is it possible to do that ?
+          token = "empty";
+
+        column_it->second.push_back(token);
+      }
+    }
+  }
 }
 
 void write_includes(std::ofstream &file_out) {
@@ -133,7 +172,9 @@ void write_func_defs(std::ofstream &file_out) {
     for (auto column : line.second) {
       file_out << "case " << column.first << ":\n";
       for (auto symbol : column.second) {
-        if (is_terminal(symbol))
+        if (symbol == "EMPTY") {
+
+        } else if (is_terminal(symbol))
           file_out << "process_input(" << to_upper(symbol) << ");\n";
         else
           file_out << "f_" << symbol << "();\n";
