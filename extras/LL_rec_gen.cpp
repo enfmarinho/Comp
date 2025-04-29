@@ -61,28 +61,39 @@ void read_file(std::ifstream &file_in) {
 
   while (!file_in.eof()) {
     std::getline(file_in, line);
-    iss.str(line);
+    std::stringstream iss2(line);
     std::string non_terminal_symbol, table_value;
-    std::getline(iss, non_terminal_symbol, ',');
+    std::getline(iss2, non_terminal_symbol, ',');
 
     auto line_it = table.find(non_terminal_symbol);
     for (int i = 0; i < terminal_symbols.size(); ++i) {
 
-      std::getline(iss, table_value, ',');
+      std::getline(iss2, table_value, ',');
       if (table_value.empty())
         continue;
 
+      if (line_it == table.end()) {
+        std::unordered_map<std::string, std::vector<std::string>> tmp;
+        tmp.insert({terminal_symbols[i], std::vector<std::string>()});
+        table.insert({non_terminal_symbol, tmp});
+        line_it = table.find(non_terminal_symbol);
+      }
       auto column_it = line_it->second.find(terminal_symbols[i]);
-      std::istringstream iss2(table_value);
-      iss2 >> token;
+      std::istringstream iss3(table_value);
+      iss3 >> token;
       assert(token == non_terminal_symbol);
-      iss2 >> token;
+      iss3 >> token;
       assert(token == "::=");
 
-      while (iss2 >> token) {
+      while (iss3 >> token) {
         if (token == "ε") // TODO is it possible to do that ?
           token = "empty";
 
+        if (column_it == line_it->second.end()) {
+          line_it->second.insert(
+              {terminal_symbols[i], std::vector<std::string>()});
+          column_it = line_it->second.find(terminal_symbols[i]);
+        }
         column_it->second.push_back(token);
       }
     }
