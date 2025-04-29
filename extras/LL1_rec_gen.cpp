@@ -103,7 +103,6 @@ void read_file(std::ifstream &file_in) {
 void write_includes(std::ofstream &file_out) {
   file_out << "#include \"../build/lex.yy.cc\"\n";
   file_out << "#include \"../build/parser.tab.hpp\"\n";
-  file_out << "#include <unordered_map>\n";
   file_out << "#include <iostream>\n";
   file_out << "#include <cstdlib>\n";
 }
