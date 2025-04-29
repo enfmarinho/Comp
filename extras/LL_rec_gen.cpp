@@ -53,6 +53,7 @@ void read_file(std::ifstream &file_in) {
   std::stringstream iss(line);
 
   std::vector<std::string> terminal_symbols;
+  std::getline(iss, line, ','); // Discard first value
   while (std::getline(iss, token, ',')) {
     assert(!token.empty());
     terminal_symbols.push_back(token);
@@ -89,8 +90,8 @@ void read_file(std::ifstream &file_in) {
 }
 
 void write_includes(std::ofstream &file_out) {
-  file_out << "#include <../build/lex.yy.cc>\n";
-  file_out << "#include <../build/parser.tab.hpp>\n";
+  file_out << "#include \"../build/lex.yy.cc\"\n";
+  file_out << "#include \"../build/parser.tab.hpp\"\n";
   file_out << "#include <unordered_map>\n";
   file_out << "#include <iostream>\n";
   file_out << "#include <cstdlib>\n";
@@ -101,29 +102,29 @@ void write_general_defs(std::ofstream &file_out) {
   file_out << "SymbolType token = yylex();" << "\n";
   file_out << "YYSTYPE yylval;" << "\n";
 
-  file_out << "void error(SymbolType symbol, const YYSTYPE &input_yylval) {\n"
+  file_out << "void error() {\n"
            << "int line, column;\n"
-           << "if (symbol == INT_LITERAL) {\n"
-           << "line = input_yylval.int_value.line; \n"
-           << "column = input_yylval.int_value.column;\n"
-           << "} else if (symbol == FLOAT_LITERAL) {\n"
-           << "line = input_yylval.float_value.line;\n"
-           << "column = input_yylval.float_value.column;\n"
+           << "if (token == INT_LITERAL) {\n"
+           << "line = yylval.int_value.line; \n"
+           << "column = yylval.int_value.column;\n"
+           << "} else if (token == FLOAT_LITERAL) {\n"
+           << "line = yylval.float_value.line;\n"
+           << "column = yylval.float_value.column;\n"
            << "}\n"
-           << "else if (symbol == STRING_LITERAL) {\n"
-           << "line = input_yylval.string_value.line;\n"
-           << "column = input_yylval.string_value.column;\n"
+           << "else if (token == STRING_LITERAL) {\n"
+           << "line = yylval.string_value.line;\n"
+           << "column = yylval.string_value.column;\n"
            << "}\n"
-           << "else if (symbol == ID) {\n"
-              "line = input_yylval.id.line;\n"
-           << "column = input_yylval.id.column;\n"
+           << "else if (token == ID) {\n"
+              "line = yylval.id.line;\n"
+           << "column = yylval.id.column;\n"
            << "}\n"
            << "else {\n"
-           << "line = input_yylval.general_values.line;\n"
-           << "column = input_yylval.general_values.column;\n"
+           << "line = yylval.general_values.line;\n"
+           << "column = yylval.general_values.column;\n"
            << "}\n"
            << "std::cout << \"Error at line \" << line << \" and at column \" "
-           << "column;\n"
+           << "<< column;\n"
            << "exit(1);\n"
            << "}\n";
 
@@ -142,9 +143,9 @@ void write_func_signatures(std::ofstream &file_out) {
 }
 
 void write_main(std::ofstream &file_out) {
-  std::cout << "void main() {" << "\n";
-  std::cout << "    f_PROGRAM();" << "\n";
-  std::cout << "}" << "\n";
+  file_out << "int main() {" << "\n";
+  file_out << "    f_PROGRAM();" << "\n";
+  file_out << "}" << "\n";
 }
 
 bool is_terminal(std::string symbol) {
