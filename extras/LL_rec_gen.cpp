@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-#define INPUT_FILE "left_recursive_grammar.txt"
+#define INPUT_FILE "left_recursive_table.txt"
 #define OUTPUT_FILE "LL_rec.cpp"
 #define SymbolType int
 
