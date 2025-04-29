@@ -155,7 +155,7 @@ void write_func_signatures(std::ofstream &file_out) {
 
 void write_main(std::ofstream &file_out) {
   file_out << "int main() {" << "\n";
-  file_out << "    f_PROGRAM();" << "\n";
+  file_out << "f_PROGRAM();\n"; // This is the start symbol, it's hardcoded
   file_out << "}" << "\n";
 }
 
@@ -165,11 +165,10 @@ bool is_terminal(std::string symbol) {
   return symbol[0] > 'Z';
 }
 
-std::string to_upper(std::string s) {
+std::string to_upper(const std::string &s) {
   std::string ans;
   ans.reserve(s.size());
   for (const char &c : s) {
-    assert(islower(c));
     ans.push_back(std::toupper(c));
   }
 
@@ -182,9 +181,9 @@ void write_func_defs(std::ofstream &file_out) {
 
     file_out << "switch(token){\n";
     for (auto column : line.second) {
-      file_out << "case " << column.first << ":\n";
+      file_out << "case " << to_upper(column.first) << ":\n";
       for (auto symbol : column.second) {
-        if (symbol == "EMPTY") {
+        if (symbol == "empty") {
 
         } else if (is_terminal(symbol))
           file_out << "process_input(" << to_upper(symbol) << ");\n";
