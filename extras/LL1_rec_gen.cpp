@@ -8,10 +8,11 @@
 #include <unordered_map>
 #include <vector>
 
-#define INPUT_FILE "left_recursive_table.txt"
-#define OUTPUT_FILE "LL_rec.cpp"
+#define INPUT_FILE "left_recursive_table.csv"
+#define OUTPUT_FILE "LL1_rec.cpp"
 #define SymbolType int
 
+std::string start_symbol = "";
 std::unordered_map<std::string,
                    std::unordered_map<std::string, std::vector<std::string>>>
     table;
@@ -64,6 +65,8 @@ void read_file(std::ifstream &file_in) {
     std::stringstream iss2(line);
     std::string non_terminal_symbol, table_value;
     std::getline(iss2, non_terminal_symbol, ',');
+    if (start_symbol == "")
+      start_symbol = non_terminal_symbol;
 
     auto line_it = table.find(non_terminal_symbol);
     for (int i = 0; i < terminal_symbols.size(); ++i) {
@@ -126,7 +129,7 @@ void write_general_defs(std::ofstream &file_out) {
            << "column = yylval.string_value.column;\n"
            << "}\n"
            << "else if (token == ID) {\n"
-              "line = yylval.id.line;\n"
+           << "line = yylval.id.line;\n"
            << "column = yylval.id.column;\n"
            << "}\n"
            << "else {\n"
@@ -147,14 +150,14 @@ void write_general_defs(std::ofstream &file_out) {
 }
 
 void write_func_signatures(std::ofstream &file_out) {
-  for (auto entry : table) {
+  for (auto entry : table)
     file_out << "void f_" << entry.first << "();\n";
-  }
 }
 
 void write_main(std::ofstream &file_out) {
   file_out << "int main() {" << "\n";
-  file_out << "f_PROGRAM();\n"; // This is the start symbol, it's hardcoded
+  file_out << "f_" << start_symbol << "();\n";
+  file_out << "std::cout << \"Input belongs to grammar!\";\n";
   file_out << "}" << "\n";
 }
 
@@ -167,9 +170,8 @@ bool is_terminal(std::string symbol) {
 std::string to_upper(const std::string &s) {
   std::string ans;
   ans.reserve(s.size());
-  for (const char &c : s) {
+  for (const char &c : s)
     ans.push_back(std::toupper(c));
-  }
 
   return ans;
 }
