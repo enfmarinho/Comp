@@ -101,8 +101,9 @@ void read_file(std::ifstream &file_in) {
         column_it->second.push_back(token);
       }
     }
+    std::getline(file_in,
+                 line); // after every other line there is an useless one
   }
-  std::getline(file_in, line); // after every other line there is an useless one
 }
 
 void write_includes(std::ofstream &file_out) {
