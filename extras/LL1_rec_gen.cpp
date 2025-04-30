@@ -159,7 +159,7 @@ void write_func_signatures(std::ofstream &file_out) {
 void write_main(std::ofstream &file_out) {
   file_out << "int main() {" << "\n";
   file_out << "f_" << start_symbol << "();\n";
-  file_out << "std::cout << \"Input belongs to grammar!\";\n";
+  file_out << "std::cout << \"Input belongs to grammar!\" << std::endl;\n";
   file_out << "}" << "\n";
 }
 

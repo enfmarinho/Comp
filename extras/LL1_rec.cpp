@@ -98,7 +98,7 @@ void f_IF_STMT();
 void f_CALL_STMT();
 int main() {
   f_S();
-  std::cout << "Input belongs to grammar!";
+  std::cout << "Input belongs to grammar!" << std::endl;
 }
 void f_DO_STMT_LIST() {
   switch (token) {
