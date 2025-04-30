@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cctype>
+#include <cstdio>
 #include <fstream>
 #include <ios>
 #include <iostream>
@@ -72,7 +73,7 @@ void read_file(std::ifstream &file_in) {
     for (int i = 0; i < terminal_symbols.size(); ++i) {
 
       std::getline(iss2, table_value, ',');
-      if (table_value.empty())
+      if (table_value.empty() || table_value.size() == 1)
         continue;
 
       if (line_it == table.end()) {
@@ -101,6 +102,7 @@ void read_file(std::ifstream &file_in) {
       }
     }
   }
+  std::getline(file_in, line); // after every other line there is an useless one
 }
 
 void write_includes(std::ofstream &file_out) {
@@ -188,7 +190,7 @@ void write_func_defs(std::ofstream &file_out) {
 
         } else if (is_terminal(symbol))
           file_out << "process_input(" << to_upper(symbol) << ");\n";
-        else
+        else if (symbol != "$")
           file_out << "f_" << symbol << "();\n";
       }
       file_out << "break;\n";
