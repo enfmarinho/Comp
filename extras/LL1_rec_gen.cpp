@@ -61,8 +61,7 @@ void read_file(std::ifstream &file_in) {
     terminal_symbols.push_back(token);
   }
 
-  while (!file_in.eof()) {
-    std::getline(file_in, line);
+  while (std::getline(file_in, line)) {
     std::stringstream iss2(line);
     std::string non_terminal_symbol, table_value;
     std::getline(iss2, non_terminal_symbol, ',');
