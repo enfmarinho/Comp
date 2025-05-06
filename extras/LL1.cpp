@@ -74,10 +74,12 @@ bool LL_table(std::stack<SymbolType> &stack) {
                     .empty()) { // If there is a relevant rule associated to the
                                 // non-terminal symbol at the top of the stack
       stack.pop();
-      for (SymbolType t : consult_table(top_stack_symbol, curr_input_symbol)) {
-        if (t != EMPTY) { // Add symbols in table to the stack, except when
-                          // symbol is empty
-          stack.push(t);
+      std::vector<SymbolType> rule =
+          consult_table(top_stack_symbol, curr_input_symbol);
+      for (int i = rule.size() - 1; i >= 0; --i) {
+        if (rule[i] != EMPTY) { // Add symbols in table to the stack, except
+                                // when symbol is empty
+          stack.push(rule[i]);
         }
       }
     } else {
