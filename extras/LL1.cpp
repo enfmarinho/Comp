@@ -1,6 +1,8 @@
 #include <cassert>
 #include <cstring>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stack>
 #include <vector>
 
@@ -8,6 +10,7 @@
 #include "../build/parser.tab.hpp"
 #include "non_terminals.h"
 
+#define INPUT_FILE "left_recursive_table.csv"
 #define SymbolType int
 
 // Global variables
@@ -96,8 +99,68 @@ std::vector<SymbolType> &consult_table(SymbolType non_terminal,
   return table[non_terminal][terminal];
 }
 
+// Returns true if read "/n"
+bool get_next_csv_value(std::ifstream &file_in, std::string &value) {
+  value = "";
+  char c = file_in.get();
+  while (c != '\n' && c != ',' && !file_in.eof()) {
+    value.push_back(c);
+    c = file_in.get();
+  }
+  return c == '\n';
+}
+
+void ignore_line(std::ifstream &file_in) {
+  std::string garbage;
+  while (!get_next_csv_value(file_in, garbage)) {
+  }
+}
+
 void init_table() {
-  // TODO
+  std::ifstream file_in(INPUT_FILE);
+  std::string token;
+
+  std::vector<std::string> terminal_symbols;
+  get_next_csv_value(file_in, token); // Discard first value
+  while (!get_next_csv_value(file_in, token)) {
+    assert(!token.empty());
+    terminal_symbols.push_back(token);
+  }
+  // terminal_symbols.push_back(token);
+  terminal_symbols.push_back("kw_bool"); // Hard fix
+
+  std::string non_terminal_symbol;
+  while (!file_in.eof() && non_terminal_symbol != "TYPE") {
+    get_next_csv_value(file_in, non_terminal_symbol);
+    int non_terminal_symbol_key = get_symbol_key(non_terminal_symbol);
+
+    for (int i = 0; i < terminal_symbols.size(); ++i) {
+      std::string table_value;
+      get_next_csv_value(file_in, table_value);
+
+      if (table_value.empty() || table_value.size() == 1)
+        continue;
+
+      std::istringstream iss(table_value);
+      iss >> token;
+      assert(token == non_terminal_symbol);
+      iss >> token;
+      assert(token == "::=");
+
+      while (iss >> token) {
+        if (token == "ε")
+          token = "empty";
+        else if (token == "$")
+          continue;
+
+        consult_table(non_terminal_symbol_key,
+                      get_symbol_key(terminal_symbols[i]))
+            .push_back(get_symbol_key(token));
+      }
+    }
+    if (!file_in.eof())
+      ignore_line(file_in);
+  }
 }
 
 bool is_terminal(SymbolType symbol) { return symbol >= EMPTY; }
