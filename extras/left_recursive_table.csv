@@ -126,3 +126,4 @@ DO_STMT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,DO_STMT ::= kw_do DO_STMT_
 DO_STMT_LIST,,,DO_STMT_LIST ::= id NAME_STMT,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,DO_STMT_LIST ::= NAMELESS_ASSIGN_STMT,,,,,,,,DO_STMT_LIST ::= IF_STMT,,,,,DO_STMT_LIST ::= DO_STMT,DO_STMT_LIST ::= ε,DO_STMT_LIST ::= RETURN_STMT,DO_STMT_LIST ::= kw_exit kw_when EXP,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 TYPE,,,TYPE ::= id,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,TYPE ::= kw_ref open_paren TYPE close_paren,,,,,,,,,,,,,,,,,,,TYPE ::= kw_float,TYPE ::= kw_int,TYPE ::= kw_string,TYPE ::= kw_bool
+
