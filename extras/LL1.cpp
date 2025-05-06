@@ -54,10 +54,10 @@ bool LL_table(std::stack<SymbolType> &stack) {
   while (!stack.empty() && !reached_input_end) {
     SymbolType top_stack_symbol = stack.top();
     if (must_read_input_symbol) {
-      SymbolType symbol = yylex();
+      curr_input_symbol = yylex();
       must_read_input_symbol = false;
-      if (symbol == 0) {
-        symbol = END;
+      if (curr_input_symbol == 0) {
+        curr_input_symbol = END;
         reached_input_end = true;
       }
     }
