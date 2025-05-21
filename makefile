@@ -1,5 +1,5 @@
 # Tools
-CXX = clang++
+CXX = g++
 YACC = bison
 LEX = flex
 
