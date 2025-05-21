@@ -104,10 +104,10 @@ void yyerror(char *s) {
 %left OP_MULT OP_DIV
 
 %right OP_EXP
-%right OP_NOT
-%right KW_REF KW_DEREF
+%right UMINUS OP_NOT
+%nonassoc OPEN_PAREN CLOSE_PAREN
 %right KW_DOT
-%right UMINUS
+%right KW_REF KW_DEREF
 
 %%
 
