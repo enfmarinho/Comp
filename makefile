@@ -6,7 +6,7 @@ LEX = flex
 # Flags settings
 CXXFLAGS = -std=c++17 -I$(BUILD_DIR) -I$(SRC_DIR)
 LEXFLAGS = -o $(LEX_OUT)
-YACCFLAGS = -d -v -o $(YACC_OUT)
+YACCFLAGS = -d -o $(YACC_OUT)
 
 # Directories
 SRC_DIR = src
