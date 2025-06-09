@@ -8,6 +8,7 @@
 
 struct Symbol {
   yytokentype token;
+  std::string type;
 };
 
 class SymbolTable {
