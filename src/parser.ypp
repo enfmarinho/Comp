@@ -2,6 +2,7 @@
 
 #include "parser.tab.hpp"
 #include <cstdio>
+#include <iostream>
 
 extern int yylex();
 extern int curr_line;
@@ -10,6 +11,10 @@ extern int curr_column;
 void yyerror(char *s) {
     fprintf(stderr, "at line %i and column %i: %s\n", curr_line, curr_column, s);
 }
+
+struct TypeNode {
+    std::string type;
+};
 
 %}
 
@@ -33,6 +38,8 @@ void yyerror(char *s) {
     struct {
         int line, column;
     } general_values;
+
+    struct TypeNode *typenode;
 } 
 
 %token <id> ID
@@ -91,6 +98,16 @@ void yyerror(char *s) {
 %token <general_values> OPEN_CURLY
 %token <general_values> CLOSE_CURLY
 
+%type <typenode> type
+%type <typenode> bool_literal
+%type <typenode> var_decl
+%type <typenode> decl
+%type <typenode> proc_decl
+%type <typenode> rec_decl
+%type <typenode> literal
+%type <typenode> opt_proc_return_type
+%type <typenode> exp
+
 // precedence related stuff
 %start program
 
@@ -122,18 +139,49 @@ decl_list : decl {}
           | decl_list KW_SEMICOLUMN decl {}
           ;
 
-decl : var_decl {}
-     | proc_decl {}
-     | rec_decl {}
+decl : var_decl { $$ = $1; }      // Propagate TypeNode from var_decl
+     | proc_decl { $$ = $1; }     // Propagate TypeNode from proc_decl
+     | rec_decl { $$ = $1; }      // Propagate TypeNode from rec_decl
      ;
 
-var_decl : KW_VAR ID KW_COLUMN type {}
-         | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {}
-         | KW_VAR ID OP_ASSIGN exp {}
+var_decl : KW_VAR ID KW_COLUMN type {
+    struct TypeNode *type_info = $4;
+    struct TypeNode *node = new TypeNode;
+    node->type = type_info->type;
+    // Here you would typically add ID ($2_text) and its type (node->type) to a symbol table
+    $$ = node;
+    // printf("var_decl type: %s\n", node->type.c_str()); // Your debug print
+}
+         | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
+    struct TypeNode *declared_type_info = $4;
+    struct TypeNode *exp_type_info = $6;
+    struct TypeNode *node = new TypeNode;
+    node->type = declared_type_info->type;
+    // Type Checking: Check if exp_type_info->type is compatible with declared_type_info->type
+    // E.g., if (exp_type_info->type != declared_type_info->type) yyerror("Type mismatch in assignment");
+    // Add ID ($2_text) and its type (node->type) to symbol table
+    $$ = node;
+}
+         | KW_VAR ID OP_ASSIGN exp { // Type inference
+    struct TypeNode *exp_type_info = $4;
+    struct TypeNode *node = new TypeNode;
+    node->type = exp_type_info->type;
+    // Add ID ($2_text) and its inferred type (node->type) to symbol table
+    $$ = node;
+}
          ;
 
-opt_proc_return_type : /*empty*/ {}
-                     | KW_COLUMN type {}
+opt_proc_return_type : /*empty*/ {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("void"); // Or any other representation for void/no type
+    $$ = node;
+}
+                     | KW_COLUMN type {
+    struct TypeNode *type_info = $2;
+    struct TypeNode *node = new TypeNode;
+    node->type = type_info->type;
+    $$ = node;
+}
                      ;
 
 proc_decl : KW_PROCEDURE ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN opt_proc_return_type KW_BEGIN 
@@ -211,15 +259,39 @@ var : ID {}
     | exp KW_DOT ID {}
     ;
 
-literal : FLOAT_LITERAL {}
-        | INT_LITERAL {}
-        | STRING_LITERAL {}
-        | bool_literal {}
-        | KW_NULL {}
+literal : FLOAT_LITERAL {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("float");
+    $$ = node;
+}
+        | INT_LITERAL {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("int");
+    $$ = node;
+}
+        | STRING_LITERAL {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("string");
+    $$ = node;
+}
+        | bool_literal { $$ = $1; } // Propagate from bool_literal
+        | KW_NULL {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("null"); // Or a specific nullable type
+    $$ = node;
+}
         ;
 
-bool_literal : KW_TRUE {}
-             | KW_FALSE {}
+bool_literal : KW_TRUE {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("bool");
+    $$ = node;
+}
+             | KW_FALSE {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("bool");
+    $$ = node;
+}
              ;
 
 stmt : assign_stmt {}
@@ -269,12 +341,40 @@ do_while_opt_stmt_list : /* empty */ {}
                        | KW_EXIT KW_WHEN exp {}
                        ;
 
-type : KW_FLOAT {}
-     | KW_INT {}
-     | KW_STRING {}
-     | KW_BOOL {}
-     | ID {}
-     | KW_REF OPEN_PAREN type CLOSE_PAREN {}
+type : KW_FLOAT {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("float");
+    $$ = node;
+}
+     | KW_INT {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("int");
+    $$ = node;
+}
+     | KW_STRING {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("string");
+    $$ = node;
+}
+     | KW_BOOL {
+    struct TypeNode *node = new TypeNode;
+    node->type = std::string("bool");
+    $$ = node;
+}
+     | ID { // Usage of an ID as a type name, e.g., var x : MyCustomType;
+    struct TypeNode *node = new TypeNode;
+    // The type is the name of the identifier itself.
+    // This assumes ID ($1_text) is a declared type (e.g., a struct name).
+    // You'd typically verify $1_text is a known type from the symbol table.
+    node->type = std::string($1.simble);
+    $$ = node;
+}
+     | KW_REF OPEN_PAREN type CLOSE_PAREN { // e.g. ref(int)
+    struct TypeNode *inner_type_node = $3; // This inner_type_node->type is, e.g., "int"
+    struct TypeNode *node = new TypeNode;
+    node->type = "ref(" + inner_type_node->type + ")"; // So node->type becomes "ref(int)"
+    $$ = node;
+}
      ;
 
 %%
