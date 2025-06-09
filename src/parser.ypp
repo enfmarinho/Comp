@@ -145,14 +145,15 @@ decl : var_decl { $$ = $1; }      // Propagate TypeNode from var_decl
      ;
 
 var_decl : KW_VAR ID KW_COLUMN type {
+    std::string var_name = $2.simble;
     struct TypeNode *type_info = $4;
     struct TypeNode *node = new TypeNode;
     node->type = type_info->type;
     // Here you would typically add ID ($2_text) and its type (node->type) to a symbol table
     $$ = node;
-    // printf("var_decl type: %s\n", node->type.c_str()); // Your debug print
 }
          | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
+    std::string var_name = $2.simble;
     struct TypeNode *declared_type_info = $4;
     struct TypeNode *exp_type_info = $6;
     struct TypeNode *node = new TypeNode;
@@ -163,6 +164,7 @@ var_decl : KW_VAR ID KW_COLUMN type {
     $$ = node;
 }
          | KW_VAR ID OP_ASSIGN exp { // Type inference
+    std::string var_name = $2.simble;
     struct TypeNode *exp_type_info = $4;
     struct TypeNode *node = new TypeNode;
     node->type = exp_type_info->type;
@@ -364,8 +366,7 @@ type : KW_FLOAT {
      | ID { // Usage of an ID as a type name, e.g., var x : MyCustomType;
     struct TypeNode *node = new TypeNode;
     // The type is the name of the identifier itself.
-    // This assumes ID ($1_text) is a declared type (e.g., a struct name).
-    // You'd typically verify $1_text is a known type from the symbol table.
+    // This assumes ID ($1.simbol) is defined.
     node->type = std::string($1.simble);
     $$ = node;
 }
