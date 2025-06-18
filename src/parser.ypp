@@ -1,11 +1,14 @@
 %{
 
 #include "parser.tab.hpp"
+#include "symbol_table.hpp"
 #include <cstdio>
 
 extern int yylex();
 extern int curr_line;
 extern int curr_column;
+
+SymbolTableStack symbol_table_stack;
 
 void yyerror(char *s) {
     fprintf(stderr, "at line %i and column %i: %s\n", curr_line, curr_column, s);
@@ -90,6 +93,16 @@ void yyerror(char *s) {
 %token <general_values> CLOSE_PAREN
 %token <general_values> OPEN_CURLY
 %token <general_values> CLOSE_CURLY
+%token SYMBOL_UNKNOKW
+%token TYPE_PROCEDURE
+%token TYPE_VOID
+%token TYPE_STRUCT
+%token TYPE_INT
+%token TYPE_FLOAT
+%token TYPE_BOOL
+%token TYPE_STRING
+%token TYPE_REF
+%token TYPE_REFERENCE
 
 // precedence related stuff
 %start program
@@ -127,9 +140,15 @@ decl : var_decl {}
      | rec_decl {}
      ;
 
-var_decl : KW_VAR ID KW_COLUMN type {}
-         | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {}
-         | KW_VAR ID OP_ASSIGN exp {}
+var_decl : KW_VAR ID KW_COLUMN type {
+            symbol_table.insert({$2, Symbol($3)});
+         }
+         | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
+             symbol_table.insert({$2, Symbol($3)});
+         }
+         | KW_VAR ID OP_ASSIGN exp {
+             symbol_table.insert({$2, Symbol(SYMBOL_UNKNOKW)});
+         }
          ;
 
 opt_proc_return_type : /*empty*/ {}
@@ -269,12 +288,12 @@ do_while_opt_stmt_list : /* empty */ {}
                        | KW_EXIT KW_WHEN exp {}
                        ;
 
-type : KW_FLOAT {}
-     | KW_INT {}
-     | KW_STRING {}
-     | KW_BOOL {}
-     | ID {}
-     | KW_REF OPEN_PAREN type CLOSE_PAREN {}
+type : KW_FLOAT { $$ = TYPE_FLOAT; }
+     | KW_INT { $$ = TYPE_INT; }
+     | KW_STRING { $$ = TYPE_STRING; }
+     | KW_BOOL { $$ = TYPE_BOOL; }
+     | ID { $$ = TYPE_STRUCT; }
+     | KW_REF OPEN_PAREN type CLOSE_PAREN { $$ = TYPE_REF; }
      ;
 
 %%
