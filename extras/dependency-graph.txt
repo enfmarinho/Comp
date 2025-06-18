@@ -1,0 +1,229 @@
+@startuml
+' Start state points to the main program rule
+[*] -> program
+
+' Grammar Rules Definition
+
+' Program Structure
+
+program --> ID
+
+program --> opt_decl_list
+
+
+' Optional Declaration List
+opt_decl_list --> ε
+opt_decl_list --> decl_list
+
+' Declaration List
+decl_list --> decl
+decl_list --> decl_list
+
+decl_list --> decl
+
+' Declaration Types
+decl --> var_decl
+decl --> proc_decl
+decl --> rec_decl
+
+' Variable Declaration
+
+var_decl --> ID
+
+var_decl --> type
+var_decl --> OP_ASSIGN
+var_decl --> exp
+
+' Optional Procedure Return Type
+opt_proc_return_type --> ε
+
+opt_proc_return_type --> type
+
+' Procedure Declaration
+
+proc_decl --> ID
+proc_decl --> OPEN_PAREN
+proc_decl --> opt_paramfield_decl_list_comma
+proc_decl --> CLOSE_PAREN
+proc_decl --> opt_proc_return_type
+
+proc_decl --> proc_body
+
+
+' Procedure Body
+proc_body --> opt_stmt_list
+proc_body --> opt_decl_list
+
+proc_body --> opt_stmt_list
+
+' Record (Struct) Declaration
+
+rec_decl --> ID
+rec_decl --> OPEN_CURLY
+rec_decl --> opt_paramfield_decl_list_semicolumn
+rec_decl --> CLOSE_CURLY
+
+' Parameter/Field Declaration
+paramfield_decl --> ID
+
+paramfield_decl --> type
+
+' Optional Parameter/Field Lists (Comma separated)
+opt_paramfield_decl_list_comma --> ε
+opt_paramfield_decl_list_comma --> paramfield_decl_list_comma
+
+' Parameter/Field Lists (Comma separated)
+paramfield_decl_list_comma --> paramfield_decl
+paramfield_decl_list_comma --> paramfield_decl_list_comma
+
+paramfield_decl_list_comma --> paramfield_decl
+
+' Optional Parameter/Field Lists (Semicolon separated)
+opt_paramfield_decl_list_semicolumn --> ε
+opt_paramfield_decl_list_semicolumn --> paramfield_decl_list_semicolumn
+
+' Parameter/Field Lists (Semicolon separated)
+paramfield_decl_list_semicolumn --> paramfield_decl
+paramfield_decl_list_semicolumn --> paramfield_decl_list_semicolumn
+
+paramfield_decl_list_semicolumn --> paramfield_decl
+
+' Optional Statement List
+opt_stmt_list --> ε
+opt_stmt_list --> stmt_list
+
+' Statement List
+stmt_list --> stmt
+stmt_list --> stmt_list
+
+stmt_list --> stmt
+
+' Expression
+exp --> exp
+exp --> OP_AND
+exp --> OP_OR
+exp --> OP_NOT
+exp --> OP_SMALLER
+exp --> OP_EQUAL
+exp --> OP_ADD
+exp --> OP_SUB
+exp --> literal
+exp --> call_stmt
+
+exp --> ID
+exp --> var
+exp --> ref_var
+exp --> deref_var
+exp --> OPEN_PAREN
+exp --> CLOSE_PAREN
+
+' Reference Variable
+
+ref_var --> OPEN_PAREN
+ref_var --> var
+ref_var --> CLOSE_PAREN
+
+' Dereference Variable
+
+deref_var --> OPEN_PAREN
+deref_var --> var
+deref_var --> deref_var
+deref_var --> CLOSE_PAREN
+
+' Variable Access
+var --> ID
+var --> exp
+
+var --> ID
+
+' Literal Values
+literal --> FLOAT_LITERAL
+literal --> INT_LITERAL
+literal --> STRING_LITERAL
+literal --> bool_literal
+
+
+' Boolean Literal
+
+
+
+' Statement Types
+stmt --> assign_stmt
+stmt --> if_stmt
+stmt --> while_stmt
+stmt --> return_stmt
+stmt --> call_stmt
+stmt --> do_while_stmt
+
+' Assignment Statement
+assign_stmt --> var
+assign_stmt --> deref_var
+assign_stmt --> OP_ASSIGN
+assign_stmt --> exp
+
+' Optional Else Statement
+opt_else_stmt --> ε
+
+opt_else_stmt --> opt_stmt_list
+
+' If Statement
+
+if_stmt --> exp
+
+if_stmt --> opt_stmt_list
+if_stmt --> opt_else_stmt
+
+
+' While Statement
+
+while_stmt --> exp
+
+while_stmt --> opt_stmt_list
+
+
+' Return Statement
+
+return_stmt --> exp
+
+' Optional Expression List
+opt_exp_list --> ε
+opt_exp_list --> exp_list
+
+' Expression List
+exp_list --> exp
+exp_list --> exp_list
+
+exp_list --> exp
+
+' Call Statement
+call_stmt --> ID
+call_stmt --> OPEN_PAREN
+call_stmt --> opt_exp_list
+call_stmt --> CLOSE_PAREN
+
+' Do-While Statement
+
+do_while_stmt --> do_while_opt_stmt_list
+
+
+' Optional Statement list for Do-While
+do_while_opt_stmt_list --> ε
+do_while_opt_stmt_list --> if_stmt
+do_while_opt_stmt_list --> assign_stmt
+do_while_opt_stmt_list --> return_stmt
+do_while_opt_stmt_list --> call_stmt
+do_while_opt_stmt_list --> do_while_stmt
+
+
+do_while_opt_stmt_list --> exp
+
+' Type Definition
+
+
+type --> ID
+
+type --> OPEN_PAREN
+type --> type
+type --> CLOSE_PAREN
+
+@enduml

@@ -3,6 +3,7 @@
 #include "parser.tab.hpp"
 #include "symbol_table.hpp"
 #include <cstdio>
+#include <iostream>
 
 extern int yylex();
 extern int curr_line;
@@ -101,7 +102,6 @@ void yyerror(char *s) {
 %token TYPE_FLOAT
 %token TYPE_BOOL
 %token TYPE_STRING
-%token TYPE_REF
 %token TYPE_REFERENCE
 
 // precedence related stuff
@@ -135,25 +135,29 @@ decl_list : decl {}
           | decl_list KW_SEMICOLUMN decl {}
           ;
 
-decl : var_decl {}
-     | proc_decl {}
-     | rec_decl {}
+decl : var_decl { $$ = $1; }      // Propagate TypeNode from var_decl
+     | proc_decl { $$ = $1; }     // Propagate TypeNode from proc_decl
+     | rec_decl { $$ = $1; }      // Propagate TypeNode from rec_decl
      ;
 
 var_decl : KW_VAR ID KW_COLUMN type {
-            symbol_table.insert({$2, Symbol($3)});
-         }
-         | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
-             symbol_table.insert({$2, Symbol($3)});
-         }
-         | KW_VAR ID OP_ASSIGN exp {
-             symbol_table.insert({$2, Symbol(SYMBOL_UNKNOKW)});
-         }
-         ;
+    symbol_table.insert({$2, Symbol($4)});
+}
+| KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
+    symbol_table.insert({$2, Symbol($4)});
+}
+| KW_VAR ID OP_ASSIGN exp {
+    symbol_table.insert({$2, Symbol($4)});
+}
+;
 
-opt_proc_return_type : /*empty*/ {}
-                     | KW_COLUMN type {}
-                     ;
+opt_proc_return_type : /*empty*/ {
+    $$ = TYPE_VOID;
+}
+| KW_COLUMN type {
+    $$ = $2;
+}
+;
 
 proc_decl : KW_PROCEDURE ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN opt_proc_return_type KW_BEGIN 
                 proc_body KW_END {}
@@ -230,16 +234,30 @@ var : ID {}
     | exp KW_DOT ID {}
     ;
 
-literal : FLOAT_LITERAL {}
-        | INT_LITERAL {}
-        | STRING_LITERAL {}
-        | bool_literal {}
-        | KW_NULL {}
-        ;
+literal : FLOAT_LITERAL {
+    $$ = TYPE_FLOAT;
+}
+| INT_LITERAL {
+    $$ = TYPE_INT;
+}
+| STRING_LITERAL {
+    $$ = TYPE_STRING;
+}
+| bool_literal { 
+    $$ = $1; 
+} 
+| KW_NULL {
+    $$ = TYPE_REFERENCE;
+}
+;
 
-bool_literal : KW_TRUE {}
-             | KW_FALSE {}
-             ;
+bool_literal : KW_TRUE {
+    $$ = TYPE_BOOL;
+}
+| KW_FALSE {
+    $$ = TYPE_BOOL;
+}
+;
 
 stmt : assign_stmt {}
      | if_stmt {}

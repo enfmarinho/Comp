@@ -1,0 +1,59 @@
+@startuml
+' Start state points to the main program rule
+[*] -> decl
+
+' Declaration Types
+decl --> var_decl1
+decl --> var_decl2
+decl --> var_decl3
+decl --> proc_decl
+decl --> rec_decl
+
+' Variable Declaration
+var_decl1 --> KW_VAR1
+var_decl1 --> ID1
+var_decl1 --> KW_COLUMN1
+var_decl1 --> type1
+var_decl1 : var_decl.t = type.t
+
+var_decl2 --> KW_VAR2
+var_decl2 --> ID2
+var_decl2 --> KW_COLUMN2
+var_decl2 --> type2
+var_decl2 --> OP_ASSIGN2
+var_decl2 --> exp2
+var_decl2 : if (type.t == exp.t) var_decl.t = type.t
+
+var_decl3 --> KW_VAR3
+var_decl3 --> ID3
+var_decl3 --> OP_ASSIGN3
+var_decl3 --> exp3
+var_decl3 : var_decl.t = exp.t
+
+' Procedure Declaration
+proc_decl --> KW_PROCEDURE
+proc_decl --> ID
+proc_decl --> OPEN_PAREN
+proc_decl --> opt_paramfield_decl_list_comma
+proc_decl --> CLOSE_PAREN
+proc_decl --> opt_proc_return_type1
+proc_decl --> opt_proc_return_type2
+proc_decl --> KW_BEGIN
+proc_decl --> proc_body
+proc_decl --> KW_END
+proc_decl : proc_decl.t = opt_proc_return_type.t
+
+' Optional Procedure Return Type
+opt_proc_return_type1 --> ε
+opt_proc_return_type1 : opt_proc_return_type.t = void
+
+opt_proc_return_type2 --> KW_COLUMN5
+opt_proc_return_type2 --> type5
+opt_proc_return_type2 : opt_proc_return_type.t = type.t
+
+' Parameter/Field Declaration
+paramfield_decl --> ID
+paramfield_decl --> KW_COLUMN
+paramfield_decl --> type
+
+@enduml
