@@ -6,7 +6,7 @@
 #include <vector>
 
 class SymbolTableStack {
-  SymbolTableStack() { m_symbol_table_stack.push_back(SymbolTable()); };
+  SymbolTableStack() { open_scope(); };
 
   void open_scope() { m_symbol_table_stack.push_back(SymbolTable()); }
 
