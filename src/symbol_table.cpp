@@ -1,25 +1,25 @@
-#include "simble_table.hpp"
+#include "symbol_table.hpp"
 
 #include <cassert>
 #include <string>
 #include <unordered_map>
 
 /// Inserts "element" into the symbol table
-void SymbolTable::insert(const std::pair<std::string, Symbol> element) {
+void SymbolTable::insert(const std::pair<std::string, Type> element) {
   symbol_table.insert(element);
 }
 
 /// Returns the last inserted element that matches "id"
-Symbol SymbolTable::consult(const std::string &id) {
+bool SymbolTable::consult(const std::string &id, Type &result) {
   int bucket = symbol_table.bucket(id);
-  auto last_inserted = symbol_table.cbegin(bucket);
   for (auto it = symbol_table.cbegin(bucket); it != symbol_table.cend(bucket);
        ++it) {
     if (it->first == id)
       last_inserted = it;
   }
   assert(last_inserted != symbol_table.cend(bucket));
-  return last_inserted->second;
+  result = last_inserted->second;
+  return true;
 }
 
 /// Removes the last inserted element that matches "id"
@@ -35,4 +35,3 @@ void SymbolTable::remove(const std::string &id) {
     symbol_table.erase(last);
   }
 }
-
