@@ -12,11 +12,13 @@ class SymbolTableStack {
 
   void close_scope() { m_symbol_table_stack.pop_back(); }
 
-  void insert(std::string id, Symbol symbol) {
+  void insert(std::string id, Type symbol) {
     m_symbol_table_stack.back().insert({id, symbol});
   }
 
-  bool consult(std::string id, Symbol &symbol) {
+  SymbolTable top() { return m_symbol_table_stack.back(); }
+
+  bool consult(std::string id, Type &symbol) {
     for (auto it = m_symbol_table_stack.rbegin();
          it != m_symbol_table_stack.rend(); ++it) {
       if (it->consult(id, symbol))
