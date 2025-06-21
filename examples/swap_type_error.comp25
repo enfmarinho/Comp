@@ -1,0 +1,13 @@
+/*
+ * This is an example of a program in the comp25 language, with an type error
+ */
+program main
+begin 
+    procedure main()
+    begin
+        var x: int;
+    in
+        x := 42.0; // Type error, there is no implicit cast
+    end
+end
+
