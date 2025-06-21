@@ -11,6 +11,7 @@ enum BaseType {
   Procedure,
   Ref,
   Error,
+  NoType,
 };
 
 #endif // !BASE_TYPE_HPP
