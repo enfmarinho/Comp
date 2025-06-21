@@ -2,21 +2,21 @@
 #include "parser.tab.hpp"
 #include "symbol_table.hpp"
 #include "symbol_table_stack.hpp"
+#include <cstdlib>
 #include "type.hpp"
 
 #include <cstdio>
-#include <memory>
 
 extern int yylex();
 extern int curr_line;
 extern int curr_column;
 
-TypePtr expected_proc_return_type = std::make_shared<Type>(NoType);
+TypePtr expected_proc_return_type = new Type(NoType);
 SymbolTableStack symbol_table_stack;
 
 void yyerror(const char *s) {
     fprintf(stderr, "at line %i and column %i: %s\n", curr_line, curr_column, s);
-    YYABORT;
+    exit(1); // Prematurely finish yacc execution with error
 }
 
 std::string type_name(TypePtr type) {
@@ -43,6 +43,7 @@ std::string type_name(TypePtr type) {
         // this functions when type is Procedure, Error or NoType
         assert("false");
     }
+    return "";
 }
 
 void assert_type(TypePtr lhs, TypePtr rhs) {
@@ -90,13 +91,12 @@ void assert_condition(TypePtr type) {
 %}
 
 %code requires {
-    #include <memory>
     #include <vector>
     #include "type.hpp"
 
-    using TypePtr = std::shared_ptr<Type>;
+    using TypePtr = Type*;
     using TypeList = std::vector<TypePtr>;
-    using TypeListPtr = std::shared_ptr<TypeList>;
+    using TypeListPtr = TypeList*;
 }
 
 %union {
@@ -123,8 +123,10 @@ void assert_condition(TypePtr type) {
     TypeListPtr type_list;
 } 
 
-%destructor { $$.~shared_ptr(); } <type>
-%destructor { $$.~shared_ptr(); } <type_list>
+// %destructor { delete $$.name; } <id>
+// %destructor { delete $$.value; } <string_value>
+// %destructor { delete $$; } <type>
+// %destructor { delete $$; } <type_list>
 
 %token <id> ID
 %token <int_value> INT_LITERAL
@@ -248,18 +250,18 @@ var_decl : KW_VAR ID KW_COLUMN type {
 ;
 
 opt_proc_return_type : /*empty*/ {
-    $$ = std::make_shared<Type>(Void);
+    $$ = new Type(Void);
 }
 | KW_COLUMN type {
-    $$ = $2;
+    $$ = new Type(*$2);
 }
 ;
 
 proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN
-            opt_proc_return_type {expected_proc_return_type = $7;} KW_BEGIN proc_body KW_END {
+            opt_proc_return_type {*expected_proc_return_type = *$7;} KW_BEGIN proc_body KW_END {
               symbol_table_stack.close_scope();
               symbol_table_stack.insert({$3.name, Type(Procedure, *$5, $7)});
-              expected_proc_return_type = std::make_shared<Type>(NoType);
+              *expected_proc_return_type = Type(NoType);
           }
           ; 
 
@@ -276,12 +278,15 @@ rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramf
 
 paramfield_decl : ID KW_COLUMN type {
                     symbol_table_stack.insert({$1.name, *$3});
-                    $$ = std::make_shared<Type>($3);
+                    $$ = new Type(*$3);
                 }
                 ;
 
-opt_paramfield_decl_list_comma : /* empty */ {$$ = std::make_shared<TypeList>();}
-                               | paramfield_decl_list_comma { $$ = $1; }
+opt_paramfield_decl_list_comma : /* empty */ {$$ = new TypeList();}
+                               | paramfield_decl_list_comma { 
+                                   $$ = new TypeList();
+                                   *$$ = *$1; 
+                               }
                                ;
 
 opt_paramfield_decl_list_semicolumn : /* empty */
@@ -289,13 +294,13 @@ opt_paramfield_decl_list_semicolumn : /* empty */
                                     ;
 
 paramfield_decl_list_comma : paramfield_decl {
-                               $$ = std::make_shared<TypeList>();
-                               $$.get()->push_back($1);
+                               $$ = new TypeList();
+                               $$->push_back($1);
                            }
-                           // TODO check this
                            | paramfield_decl_list_comma KW_COMMA paramfield_decl {
-                               $$ = $1;
-                               $$.get()->push_back($3);
+                               $$ = new TypeList();
+                               *$$ = *$1;
+                               $$->push_back($3);
                            }
                            ;
 
@@ -330,94 +335,94 @@ stmt : assign_stmt {}
 exp : exp OP_AND exp { 
         assert_type($1, $3); 
         assert_bool($1);
-        $$ = $1;
+        $$ = new Type(*$1);
     }
     | exp OP_OR exp {
         assert_type($1, $3); 
         assert_bool($1);
-        $$ = $1;
+        $$ = new Type(*$1);
     }
     | OP_NOT exp %prec OP_NOT {
         assert_bool($2);
-        $$ = $2;
+        $$ = new Type(*$2);
     }
 
     | exp OP_SMALLER exp  {
         assert_type_comp_op($1, $3); 
-        $$ = std::make_shared<Type>(Bool);
+        $$ = new Type(Bool);
     }
     | exp OP_SMALLER_OR_EQ exp  {
         assert_type_comp_op($1, $3); 
-        $$ = std::make_shared<Type>(Bool);
+        $$ = new Type(Bool);
     }
     | exp OP_GREATER exp  {
         assert_type_comp_op($1, $3); 
-        $$ = std::make_shared<Type>(Bool);
+        $$ = new Type(Bool);
     }
     | exp OP_GREATER_OR_EQ exp  {
         assert_type_comp_op($1, $3); 
-        $$ = std::make_shared<Type>(Bool);
+        $$ = new Type(Bool);
     }
     | exp OP_EQUAL exp  {
         assert_type_comp_op($1, $3); 
-        $$ = std::make_shared<Type>(Bool);
+        $$ = new Type(Bool);
     }
     | exp OP_NOT_EQUAL exp  {
         assert_type_comp_op($1, $3); 
-        $$ = std::make_shared<Type>(Bool);
+        $$ = new Type(Bool);
     }
 
     | exp OP_ADD exp {
         assert_type_arith_op($1, $3); 
-        $$ = $1;
+        $$ = new Type(*$1);
     }
     | exp OP_SUB exp {
         assert_type_arith_op($1, $3); 
-        $$ = $1;
+        $$ = new Type(*$1);
     }
     | exp OP_MULT exp {
         assert_type_arith_op($1, $3); 
-        $$ = $1;
+        $$ = new Type(*$1);
     }
     | exp OP_DIV exp {
         assert_type_arith_op($1, $3); 
-        $$ = $1;
+        $$ = new Type(*$1);
     }
     | exp OP_EXP exp {
         assert_type_arith_op($1, $3); 
-        $$ = $1;
+        $$ = new Type(*$1);
     }
     | OP_SUB exp %prec UMINUS {
         assert_type_arith_op($2, $2); 
-        $$ = $2;
+        $$ = new Type(*$2);
     }
-    | literal { $$ = $1; }
-    | call_stmt { $$ = $1; }
+    | literal { $$ = new Type(*$1); }
+    | call_stmt { $$ = new Type(*$1); }
     | KW_NEW ID { 
         Type id_type;
         symbol_table_stack.consult($2.name, id_type);
         if (id_type.base_type != Struct) 
             yyerror("Use new keyword only to instantiate structs");
 
-        $$ = std::make_shared<Type>(Struct, $2.name); 
+        $$ = new Type(Struct, $2.name); 
     }
-    | var { $$ = $1; }
-    | ref_var { $$ = $1; }
-    | deref_var { $$ = $1; }
-    | OPEN_PAREN exp CLOSE_PAREN { $$ = $2; }
+    | var { $$ = new Type(*$1); }
+    | ref_var { $$ = new Type(*$1); }
+    | deref_var { $$ = new Type(*$1); }
+    | OPEN_PAREN exp CLOSE_PAREN { $$ = new Type(*$2); }
     ;
 
-ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = std::make_shared<Type>(Ref, $3); }
+ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = new Type(Ref, $3); }
 
 deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN { 
               if ($3->base_type != Ref) 
                   yyerror("Trying to deref a non ref type");
-              $$ = $3->referenced_type; 
+              $$ = new Type(*($3->referenced_type)); 
           }
           | KW_DEREF OPEN_PAREN deref_var CLOSE_PAREN { 
               if ($3->base_type != Ref) 
                   yyerror("Trying to deref a non ref type");
-              $$ = $3->referenced_type; 
+              $$ = new Type(*($3->referenced_type)); 
           }
           ;
 
@@ -430,7 +435,7 @@ var : ID {
         yyerror(error_message.c_str());
     }
     
-    $$ = std::make_shared<Type>(id_type); 
+    $$ = new Type(id_type); 
 }
 | exp KW_DOT ID {
     std::string struct_name = $1->struct_type_name;
@@ -454,32 +459,32 @@ var : ID {
         yyerror(error_message.c_str());
     }
     
-    $$ = std::make_shared<Type>(member_type); 
+    $$ = new Type(member_type); 
 }
 ;
 
 literal : FLOAT_LITERAL {
-    $$ = std::make_shared<Type>(Float);
+    $$ = new Type(Float);
 }
 | INT_LITERAL {
-    $$ = std::make_shared<Type>(Int);
+    $$ = new Type(Int);
 }
 | STRING_LITERAL {
-    $$ = std::make_shared<Type>(String);
+    $$ = new Type(String);
 }
 | bool_literal { 
-    $$ = $1; 
+    $$ = new Type(*$1); 
 } 
 | KW_NULL {
-    $$ = std::make_shared<Type>(Ref, nullptr);
+    $$ = new Type(Ref, nullptr);
 }
 ;
 
 bool_literal : KW_TRUE {
-    $$ = std::make_shared<Type>(Bool);
+    $$ = new Type(Bool);
 }
 | KW_FALSE {
-    $$ = std::make_shared<Type>(Bool);
+    $$ = new Type(Bool);
 }
 ;
 
@@ -498,22 +503,25 @@ while_stmt : KW_WHILE exp {assert_condition($2);} KW_DO opt_stmt_list KW_OD {}
            ;
 
 return_stmt : KW_RETURN exp {
-    $$ = $2;
+    $$ = new Type(*$2);
 }
 ;
 
-opt_arguments_list : /* empty */ { $$ = std::make_shared<TypeList>(); }
-                   | argument_list { $$ = $1; }
+opt_arguments_list : /* empty */ { $$ = new TypeList(); }
+                   | argument_list { 
+                       $$ = new TypeList();
+                       *$$ = *$1; 
+                   }
                    ;
 
 argument_list : exp { 
-                  $$ = std::make_shared<TypeList>();
-                  $$.get()->push_back($1);
+                  $$ = new TypeList();
+                  $$->push_back($1);
               }
-              // TODO check this
               | argument_list KW_COMMA exp {
-                  $$ = $1;
-                  $$.get()->push_back($3);
+                  $$ = new TypeList();
+                  *$$ = *$1;
+                  $$->push_back($3);
               }
 
 call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
@@ -550,7 +558,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
         }
     }
      
-    $$ = std::make_shared<Type>(proc_type.return_type);
+    $$ = new Type(*proc_type.return_type);
 }
 ;
 
@@ -564,15 +572,15 @@ do_while_opt_stmt_list : /* empty */ {}
                        | call_stmt {}
                        | do_while_stmt {}
                        | while_stmt {}
-                       | KW_EXIT KW_WHEN exp {assert_condition($3);}
+                       | KW_EXIT KW_WHEN exp { assert_condition($3); }
                        ;
 
-type : KW_FLOAT { $$ = std::make_shared<Type>(Float); }
-     | KW_INT { $$ = std::make_shared<Type>(Int); }
-     | KW_STRING { $$ = std::make_shared<Type>(String); }
-     | KW_BOOL { $$ = std::make_shared<Type>(Bool); }
-     | ID { $$ = std::make_shared<Type>(Struct, $1.name); }
-     | KW_REF OPEN_PAREN type CLOSE_PAREN { $$ = std::make_shared<Type>(Ref, std::make_shared<Type>($3)); }
+type : KW_FLOAT { $$ = new Type(Float); }
+     | KW_INT { $$ = new Type(Int); }
+     | KW_STRING { $$ = new Type(String); }
+     | KW_BOOL { $$ = new Type(Bool); }
+     | ID { $$ = new Type(Struct, $1.name); }
+     | KW_REF OPEN_PAREN type CLOSE_PAREN { $$ = new Type(Ref, $3); }
      ;
 
 %%
