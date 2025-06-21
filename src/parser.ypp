@@ -1,15 +1,11 @@
 %{
 #include "parser.tab.hpp"
 #include "symbol_table.hpp"
+#include "symbol_table_stack.hpp"
 #include "type.hpp"
 
 #include <cstdio>
 #include <memory>
-#include <iostream>
-
-using TypePtr = std::shared_ptr<Type>;
-using TypeList = std::vector<TypePtr>;
-using TypeListPtr = std::shared_ptr<TypeList>
 
 extern int yylex();
 extern int curr_line;
@@ -23,7 +19,7 @@ void yyerror(const char *s) {
     YYABORT;
 }
 
-string type_name(TypePtr type) {
+std::string type_name(TypePtr type) {
     if (type->base_type == Void) {
         return "void";
     } else if (type->base_type == Int) {
@@ -49,49 +45,59 @@ string type_name(TypePtr type) {
     }
 }
 
-void check_type(TypePtr lhs, TypePtr rhs) {
+void assert_type(TypePtr lhs, TypePtr rhs) {
     if (lhs->base_type != rhs->base_type)
-        yyerror("Type mismatch")
+        yyerror("Type mismatch");
     if (lhs->base_type == Ref)
-        check_type(lhs->referenced_type, rhs->referenced_type);
+        assert_type(lhs->referenced_type, rhs->referenced_type);
     if (lhs->base_type == Struct && lhs->struct_type_name != rhs->struct_type_name)
-        yyerror("Type mismatch")
+        yyerror("Type mismatch");
 }
 
 bool types_match(TypePtr lhs, TypePtr rhs) {
     if (lhs->base_type != rhs->base_type)
         return false;
     if (lhs->base_type == Ref)
-        return check_type_no_error(lhs->referenced_type, rhs->referenced_type);
+        return types_match(lhs->referenced_type, rhs->referenced_type);
     if (lhs->base_type == Struct && lhs->struct_type_name != rhs->struct_type_name)
         return false;
 
     return true;
 }
 
-void check_type_comp_op(TypePtr lhs, TypePtr rhs) {
-    check_type(lhs, rhs);
+void assert_type_comp_op(TypePtr lhs, TypePtr rhs) {
+    assert_type(lhs, rhs);
     if (lhs->base_type != Int and lhs->base_type != Float) 
-        yyerror("Comparison operations must be performed for int or for float")
+        yyerror("Comparison operations must be performed for int or for float");
 }
 
-void check_type_arith_op(TypePtr lhs, TypePtr rhs) {
-    check_type(lhs, rhs);
+void assert_type_arith_op(TypePtr lhs, TypePtr rhs) {
+    assert_type(lhs, rhs);
     if (lhs->base_type != Int and lhs->base_type != Float) 
-        yyerror("Arithmetic operations must be performed only on int types or float types")
+        yyerror("Arithmetic operations must be performed only on int types or float types");
 }
 
-void check_bool(TypePtr i) {
+void assert_bool(TypePtr i) {
     if (i->base_type != Bool)
-        yyerror("Boolean operations must be performed only on bool types")
+        yyerror("Boolean operations must be performed only on bool types");
 }
 
-void check_condition(TypePtr type) {
+void assert_condition(TypePtr type) {
     if(type->base_type != Bool) 
         yyerror("condition must be bool");
 }
 
 %}
+
+%code requires {
+    #include <memory>
+    #include <vector>
+    #include "type.hpp"
+
+    using TypePtr = std::shared_ptr<Type>;
+    using TypeList = std::vector<TypePtr>;
+    using TypeListPtr = std::shared_ptr<TypeList>;
+}
 
 %union {
     struct {
@@ -116,6 +122,9 @@ void check_condition(TypePtr type) {
     TypePtr type;
     TypeListPtr type_list;
 } 
+
+%destructor { $$.~shared_ptr(); } <type>
+%destructor { $$.~shared_ptr(); } <type_list>
 
 %token <id> ID
 %token <int_value> INT_LITERAL
@@ -183,12 +192,12 @@ void check_condition(TypePtr type) {
 %type <type> call_stmt
 %type <type> return_stmt
 %type <type> opt_proc_return_type
+%type <type> paramfield_decl
 
 %type <type_list> opt_paramfield_decl_list_comma
 %type <type_list> paramfield_decl_list_comma
 %type <type_list> opt_arguments_list
 %type <type_list> argument_list
-%type <TypePtr> paramfield_decl
 
 // precedence related stuff
 %start program
@@ -230,11 +239,11 @@ var_decl : KW_VAR ID KW_COLUMN type {
     symbol_table_stack.insert({$2.name, *$4});
 }
 | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
-    check_type($4, $6) 
-    symbol_table.insert({$2.name, *$4});
+    assert_type($4, $6);
+    symbol_table_stack.insert({$2.name, *$4});
 }
 | KW_VAR ID OP_ASSIGN exp {
-    symbol_table.insert({$2.name, *$4});
+    symbol_table_stack.insert({$2.name, *$4});
 }
 ;
 
@@ -249,7 +258,7 @@ opt_proc_return_type : /*empty*/ {
 proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN
             opt_proc_return_type {expected_proc_return_type = $7;} KW_BEGIN proc_body KW_END {
               symbol_table_stack.close_scope();
-              symbol_table_stack.insert({$3.name, Type(Proc, *$5, $7)});
+              symbol_table_stack.insert({$3.name, Type(Procedure, *$5, $7)});
               expected_proc_return_type = std::make_shared<Type>(NoType);
           }
           ; 
@@ -266,12 +275,12 @@ rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramf
 ;
 
 paramfield_decl : ID KW_COLUMN type {
-                    symbol_table_stack.insert({$1.name, $3});
+                    symbol_table_stack.insert({$1.name, *$3});
                     $$ = std::make_shared<Type>($3);
                 }
                 ;
 
-opt_paramfield_decl_list_comma : /* empty */ {$$ = make_shared<TypeList>();}
+opt_paramfield_decl_list_comma : /* empty */ {$$ = std::make_shared<TypeList>();}
                                | paramfield_decl_list_comma { $$ = $1; }
                                ;
 
@@ -308,9 +317,9 @@ stmt : assign_stmt {}
      | return_stmt { 
          if (!types_match($1, expected_proc_return_type)) {
              std::string error_message = "Mismatched types: returns ";
-             error_message += base_type_name($1);
+             error_message += type_name($1);
              error_message += " expected ";
-             error_message += base_type_name(expected_proc_return_type);
+             error_message += type_name(expected_proc_return_type);
              yyerror(error_message.c_str());
          }
      }
@@ -319,67 +328,67 @@ stmt : assign_stmt {}
      ;
 
 exp : exp OP_AND exp { 
-        check_type($1, $3); 
-        check_bool($1);
+        assert_type($1, $3); 
+        assert_bool($1);
         $$ = $1;
     }
     | exp OP_OR exp {
-        check_type($1, $3); 
-        check_bool($1);
+        assert_type($1, $3); 
+        assert_bool($1);
         $$ = $1;
     }
     | OP_NOT exp %prec OP_NOT {
-        check_bool($2);
+        assert_bool($2);
         $$ = $2;
     }
 
     | exp OP_SMALLER exp  {
-        check_type_comp_op($1, $3); 
+        assert_type_comp_op($1, $3); 
         $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_SMALLER_OR_EQ exp  {
-        check_type_comp_op($1, $3); 
+        assert_type_comp_op($1, $3); 
         $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_GREATER exp  {
-        check_type_comp_op($1, $3); 
+        assert_type_comp_op($1, $3); 
         $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_GREATER_OR_EQ exp  {
-        check_type_comp_op($1, $3); 
+        assert_type_comp_op($1, $3); 
         $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_EQUAL exp  {
-        check_type_comp_op($1, $3); 
+        assert_type_comp_op($1, $3); 
         $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_NOT_EQUAL exp  {
-        check_type_comp_op($1, $3); 
+        assert_type_comp_op($1, $3); 
         $$ = std::make_shared<Type>(Bool);
     }
 
     | exp OP_ADD exp {
-        check_type_arith_op($1, $3); 
+        assert_type_arith_op($1, $3); 
         $$ = $1;
     }
     | exp OP_SUB exp {
-        check_type_arith_op($1, $3); 
+        assert_type_arith_op($1, $3); 
         $$ = $1;
     }
     | exp OP_MULT exp {
-        check_type_arith_op($1, $3); 
+        assert_type_arith_op($1, $3); 
         $$ = $1;
     }
     | exp OP_DIV exp {
-        check_type_arith_op($1, $3); 
+        assert_type_arith_op($1, $3); 
         $$ = $1;
     }
     | exp OP_EXP exp {
-        check_type_arith_op($1, $3); 
+        assert_type_arith_op($1, $3); 
         $$ = $1;
     }
     | OP_SUB exp %prec UMINUS {
-        check_type_arith_op($2, $2); 
+        assert_type_arith_op($2, $2); 
         $$ = $2;
     }
     | literal { $$ = $1; }
@@ -387,7 +396,7 @@ exp : exp OP_AND exp {
     | KW_NEW ID { 
         Type id_type;
         symbol_table_stack.consult($2.name, id_type);
-        if (id_type->base_type != Struct) 
+        if (id_type.base_type != Struct) 
             yyerror("Use new keyword only to instantiate structs");
 
         $$ = std::make_shared<Type>(Struct, $2.name); 
@@ -415,7 +424,7 @@ deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN {
 var : ID { 
     Type id_type;
     if (!symbol_table_stack.consult($1.name, id_type)) {
-        std::string error_message = "var \'"
+        std::string error_message = "var \'";
         error_message += $1.name;
         error_message += "\' not declared";
         yyerror(error_message.c_str());
@@ -437,7 +446,7 @@ var : ID {
         yyerror(error_message.c_str());
     }
 
-    if (!struct_type.symbol_table.consult($3.name, member_type)) {
+    if (!struct_type.symbol_table->consult($3.name, member_type)) {
         std::string error_message = "No member \'";
         error_message += $3.name;
         error_message += "\' in ";
@@ -482,10 +491,10 @@ opt_else_stmt : /* empty */ {}
               | KW_ELSE opt_stmt_list {}
               ;
 
-if_stmt : KW_IF exp {check_condition($2);} KW_THEN opt_stmt_list opt_else_stmt KW_FI {}
+if_stmt : KW_IF exp {assert_condition($2);} KW_THEN opt_stmt_list opt_else_stmt KW_FI {}
         ;
 
-while_stmt : KW_WHILE exp {check_condition($2);} KW_DO opt_stmt_list KW_OD {}
+while_stmt : KW_WHILE exp {assert_condition($2);} KW_DO opt_stmt_list KW_OD {}
            ;
 
 return_stmt : KW_RETURN exp {
@@ -512,13 +521,13 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
     if (!symbol_table_stack.consult($1.name, proc_type)) {
         std::string error_message = "procedure \'";
         error_message += $1.name;
-        error_message += "\' not declared"
-        yyerror(error_message.c_str())
+        error_message += "\' not declared";
+        yyerror(error_message.c_str());
     }
 
     // Check if number of arguments passed match with expected number of arguments
     TypeList param_types = *$3;
-    TypeList expected_param_types = *proc_type->param_types;
+    TypeList expected_param_types = proc_type.param_types;
     if (param_types.size() != expected_param_types.size()) {
         std::string error_message = "Procedure \'";
         error_message += $1.name;
@@ -541,7 +550,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
         }
     }
      
-    $$ = std::make_shared<Type>(proc_type->return_type);
+    $$ = std::make_shared<Type>(proc_type.return_type);
 }
 ;
 
@@ -555,7 +564,7 @@ do_while_opt_stmt_list : /* empty */ {}
                        | call_stmt {}
                        | do_while_stmt {}
                        | while_stmt {}
-                       | KW_EXIT KW_WHEN exp {check_condition($3);}
+                       | KW_EXIT KW_WHEN exp {assert_condition($3);}
                        ;
 
 type : KW_FLOAT { $$ = std::make_shared<Type>(Float); }

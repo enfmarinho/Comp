@@ -30,8 +30,10 @@ struct Type {
   Type(BaseType base_type, std::string struct_type_name,
        SymbolTable *symbol_table_cp);
 
+  Type() = default;
   Type(const Type &) = default;
   Type &operator=(const Type &) = default;
+  Type &operator=(Type &) = default;
   ~Type() = default;
 };
 

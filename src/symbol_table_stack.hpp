@@ -6,14 +6,16 @@
 #include <vector>
 
 class SymbolTableStack {
+public:
   SymbolTableStack() { open_scope(); };
+  ~SymbolTableStack() = default;
 
   void open_scope() { m_symbol_table_stack.push_back(SymbolTable()); }
 
   void close_scope() { m_symbol_table_stack.pop_back(); }
 
-  void insert(std::string id, Type symbol) {
-    m_symbol_table_stack.back().insert({id, symbol});
+  void insert(std::pair<std::string, Type> value) {
+    m_symbol_table_stack.back().insert(value);
   }
 
   SymbolTable top() { return m_symbol_table_stack.back(); }
