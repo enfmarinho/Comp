@@ -1,5 +1,4 @@
 %{
-
 #include "parser.tab.hpp"
 #include "symbol_table.hpp"
 #include "type.hpp"
@@ -8,19 +7,46 @@
 #include <memory>
 #include <iostream>
 
-extern int yylex();
-extern int curr_line;
-extern int curr_column;
-
-SymbolTableStack symbol_table_stack;
-
 using TypePtr = std::shared_ptr<Type>;
 using TypeList = std::vector<TypePtr>;
 using TypeListPtr = std::shared_ptr<TypeList>
 
+extern int yylex();
+extern int curr_line;
+extern int curr_column;
+
+TypePtr expected_proc_return_type = std::make_shared<Type>(NoType);
+SymbolTableStack symbol_table_stack;
+
 void yyerror(const char *s) {
     fprintf(stderr, "at line %i and column %i: %s\n", curr_line, curr_column, s);
     YYABORT;
+}
+
+string type_name(TypePtr type) {
+    if (type->base_type == Void) {
+        return "void";
+    } else if (type->base_type == Int) {
+        return "int";
+    } else if (type->base_type == Float) {
+        return "float";
+    } else if (type->base_type == String) {
+        return "string";
+    } else if (type->base_type == Bool) {
+        return "bool";
+    } else if (type->base_type == Struct) {
+        std::string name = "struct ";
+        name += type->struct_type_name;
+        return name;
+    } else if (type->base_type == Ref) {
+        std::string name = "ref to ";
+        name += type_name(type->referenced_type);
+        return name;
+    } else {
+        // Should not reach this, since does not make sence to call
+        // this functions when type is Procedure, Error or NoType
+        assert("false");
+    }
 }
 
 void check_type(TypePtr lhs, TypePtr rhs) {
@@ -58,6 +84,11 @@ void check_type_arith_op(TypePtr lhs, TypePtr rhs) {
 void check_bool(TypePtr i) {
     if (i->base_type != Bool)
         yyerror("Boolean operations must be performed only on bool types")
+}
+
+void check_condition(TypePtr type) {
+    if(type->base_type != Bool) 
+        yyerror("condition must be bool");
 }
 
 %}
@@ -145,16 +176,19 @@ void check_bool(TypePtr i) {
 %type <type> type
 %type <type> exp
 %type <type> literal
+%type <type> bool_literal
 %type <type> var
 %type <type> deref_var
 %type <type> ref_var
 %type <type> call_stmt
 %type <type> return_stmt
 %type <type> opt_proc_return_type
+
 %type <type_list> opt_paramfield_decl_list_comma
 %type <type_list> paramfield_decl_list_comma
+%type <type_list> opt_arguments_list
+%type <type_list> argument_list
 %type <TypePtr> paramfield_decl
-
 
 // precedence related stuff
 %start program
@@ -194,16 +228,13 @@ decl : var_decl {}
 
 var_decl : KW_VAR ID KW_COLUMN type {
     symbol_table_stack.insert({$2.name, *$4});
-    $$ = $4;
 }
 | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
     check_type($4, $6) 
     symbol_table.insert({$2.name, *$4});
-    $$ = $4;
 }
 | KW_VAR ID OP_ASSIGN exp {
     symbol_table.insert({$2.name, *$4});
-    $$ = $4;
 }
 ;
 
@@ -216,10 +247,10 @@ opt_proc_return_type : /*empty*/ {
 ;
 
 proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN
-            opt_proc_return_type KW_BEGIN proc_body KW_END {
-              // TODO check if opt_proc_return_type($7) matches return_stmt in proc_body
+            opt_proc_return_type {expected_proc_return_type = $7;} KW_BEGIN proc_body KW_END {
               symbol_table_stack.close_scope();
               symbol_table_stack.insert({$3.name, Type(Proc, *$5, $7)});
+              expected_proc_return_type = std::make_shared<Type>(NoType);
           }
           ; 
 
@@ -270,6 +301,22 @@ opt_stmt_list : /* empty */ {}
 stmt_list : stmt {}
           | stmt_list KW_SEMICOLUMN stmt {}
           ;
+
+stmt : assign_stmt {}
+     | if_stmt {}
+     | while_stmt {} 
+     | return_stmt { 
+         if (!types_match($1, expected_proc_return_type)) {
+             std::string error_message = "Mismatched types: returns ";
+             error_message += base_type_name($1);
+             error_message += " expected ";
+             error_message += base_type_name(expected_proc_return_type);
+             yyerror(error_message.c_str());
+         }
+     }
+     | call_stmt {}
+     | do_while_stmt {}
+     ;
 
 exp : exp OP_AND exp { 
         check_type($1, $3); 
@@ -427,14 +474,6 @@ bool_literal : KW_TRUE {
 }
 ;
 
-stmt : assign_stmt {}
-     | if_stmt {}
-     | while_stmt {} 
-     | return_stmt {}
-     | call_stmt {}
-     | do_while_stmt {}
-     ;
-
 assign_stmt : var OP_ASSIGN exp {}
             | deref_var OP_ASSIGN exp {}
             ;
@@ -443,10 +482,10 @@ opt_else_stmt : /* empty */ {}
               | KW_ELSE opt_stmt_list {}
               ;
 
-if_stmt : KW_IF exp KW_THEN opt_stmt_list opt_else_stmt KW_FI {}
+if_stmt : KW_IF exp {check_condition($2);} KW_THEN opt_stmt_list opt_else_stmt KW_FI {}
         ;
 
-while_stmt : KW_WHILE exp KW_DO opt_stmt_list KW_OD {}
+while_stmt : KW_WHILE exp {check_condition($2);} KW_DO opt_stmt_list KW_OD {}
            ;
 
 return_stmt : KW_RETURN exp {
@@ -468,7 +507,7 @@ argument_list : exp {
                   $$.get()->push_back($3);
               }
 
-call_stmt : ID OPEN_PAREN opt_argument_list CLOSE_PAREN {
+call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
     Type proc_type;
     if (!symbol_table_stack.consult($1.name, proc_type)) {
         std::string error_message = "procedure \'";
@@ -477,7 +516,7 @@ call_stmt : ID OPEN_PAREN opt_argument_list CLOSE_PAREN {
         yyerror(error_message.c_str())
     }
 
-    // TODO check parameters types
+    // Check if number of arguments passed match with expected number of arguments
     TypeList param_types = *$3;
     TypeList expected_param_types = *proc_type->param_types;
     if (param_types.size() != expected_param_types.size()) {
@@ -490,6 +529,7 @@ call_stmt : ID OPEN_PAREN opt_argument_list CLOSE_PAREN {
         yyerror(error_message.c_str());
     }
     
+    // Check if arguments types match with expected types
     for (int idx = 0; idx < param_types.size(); ++idx) {
         if (!types_match(param_types[idx], expected_param_types[idx])) {
             std::string error_message = "Argument ";
@@ -497,7 +537,7 @@ call_stmt : ID OPEN_PAREN opt_argument_list CLOSE_PAREN {
             error_message += " does not match expected type for procedure \'";
             error_message += $1.name;
             error_message += "\'";
-            yyerror(error_message);
+            yyerror(error_message.c_str());
         }
     }
      
@@ -505,10 +545,8 @@ call_stmt : ID OPEN_PAREN opt_argument_list CLOSE_PAREN {
 }
 ;
 
-do_while_stmt : KW_DO do_while_opt_stmt_list {symbol_table_stack.open_scope();} KW_OD {
-    symbol_table_stack.close_scope();
-}
-;
+do_while_stmt : KW_DO do_while_opt_stmt_list KW_OD {}
+              ;
 
 do_while_opt_stmt_list : /* empty */ {}
                        | if_stmt {}
@@ -516,7 +554,8 @@ do_while_opt_stmt_list : /* empty */ {}
                        | return_stmt {}
                        | call_stmt {}
                        | do_while_stmt {}
-                       | KW_EXIT KW_WHEN exp {}
+                       | while_stmt {}
+                       | KW_EXIT KW_WHEN exp {check_condition($3);}
                        ;
 
 type : KW_FLOAT { $$ = std::make_shared<Type>(Float); }
