@@ -1,5 +1,5 @@
-#ifndef SYMBOL_TABLE_H
-#define SYMBOL_TABLE_H
+#ifndef SYMBOL_TABLE_STACK_HPP
+#define SYMBOL_TABLE_STACK_HPP
 
 #include "symbol_table.hpp"
 #include <string>
@@ -31,4 +31,4 @@ private:
   std::vector<SymbolTable> m_symbol_table_stack;
 };
 
-#endif // !SYMBOL_TABLE_H
+#endif // !SYMBOL_TABLE_STACK_HPP

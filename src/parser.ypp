@@ -2,7 +2,10 @@
 
 #include "parser.tab.hpp"
 #include "symbol_table.hpp"
+#include "type.hpp"
+
 #include <cstdio>
+#include <memory>
 #include <iostream>
 
 extern int yylex();
@@ -11,27 +14,51 @@ extern int curr_column;
 
 SymbolTableStack symbol_table_stack;
 
-void yyerror(char *s) {
+using TypePtr = std::shared_ptr<Type>;
+using TypeList = std::vector<TypePtr>;
+using TypeListPtr = std::shared_ptr<TypeList>
+
+void yyerror(const char *s) {
     fprintf(stderr, "at line %i and column %i: %s\n", curr_line, curr_column, s);
+    YYABORT;
 }
 
-void check_type(Type lhs, Type rhs) {
-    //TODO
+void check_type(TypePtr lhs, TypePtr rhs) {
+    if (lhs->base_type != rhs->base_type)
+        yyerror("Type mismatch")
+    if (lhs->base_type == Ref)
+        check_type(lhs->referenced_type, rhs->referenced_type);
+    if (lhs->base_type == Struct && lhs->struct_type_name != rhs->struct_type_name)
+        yyerror("Type mismatch")
 }
 
-void check_type_comp_op(Type lhs, Type rhs) {
-    // TODO
+bool types_match(TypePtr lhs, TypePtr rhs) {
+    if (lhs->base_type != rhs->base_type)
+        return false;
+    if (lhs->base_type == Ref)
+        return check_type_no_error(lhs->referenced_type, rhs->referenced_type);
+    if (lhs->base_type == Struct && lhs->struct_type_name != rhs->struct_type_name)
+        return false;
+
+    return true;
 }
 
-void check_type_arith_op(Type lhs, Type rhs) {
-    // TODO
+void check_type_comp_op(TypePtr lhs, TypePtr rhs) {
+    check_type(lhs, rhs);
+    if (lhs->base_type != Int and lhs->base_type != Float) 
+        yyerror("Comparison operations must be performed for int or for float")
 }
 
-void check_bool(Type i) {
-    // TODO
+void check_type_arith_op(TypePtr lhs, TypePtr rhs) {
+    check_type(lhs, rhs);
+    if (lhs->base_type != Int and lhs->base_type != Float) 
+        yyerror("Arithmetic operations must be performed only on int types or float types")
 }
 
-void ce
+void check_bool(TypePtr i) {
+    if (i->base_type != Bool)
+        yyerror("Boolean operations must be performed only on bool types")
+}
 
 %}
 
@@ -55,6 +82,8 @@ void ce
     struct {
         int line, column;
     } general_values;
+    TypePtr type;
+    TypeListPtr type_list;
 } 
 
 %token <id> ID
@@ -112,15 +141,20 @@ void ce
 %token <general_values> CLOSE_PAREN
 %token <general_values> OPEN_CURLY
 %token <general_values> CLOSE_CURLY
-%token SYMBOL_UNKNOKW
-%token TYPE_PROCEDURE
-%token TYPE_VOID
-%token TYPE_STRUCT
-%token TYPE_INT
-%token TYPE_FLOAT
-%token TYPE_BOOL
-%token TYPE_STRING
-%token TYPE_REFERENCE
+
+%type <type> type
+%type <type> exp
+%type <type> literal
+%type <type> var
+%type <type> deref_var
+%type <type> ref_var
+%type <type> call_stmt
+%type <type> return_stmt
+%type <type> opt_proc_return_type
+%type <type_list> opt_paramfield_decl_list_comma
+%type <type_list> paramfield_decl_list_comma
+%type <TypePtr> paramfield_decl
+
 
 // precedence related stuff
 %start program
@@ -153,69 +187,76 @@ decl_list : decl {}
           | decl_list KW_SEMICOLUMN decl {}
           ;
 
-decl : var_decl { $$ = $1; }      // Propagate TypeNode from var_decl
-     | proc_decl { $$ = $1; }     // Propagate TypeNode from proc_decl
-     | rec_decl { $$ = $1; }      // Propagate TypeNode from rec_decl
+decl : var_decl {}
+     | proc_decl {}
+     | rec_decl {}
      ;
 
 var_decl : KW_VAR ID KW_COLUMN type {
-    symbol_table.insert({$2.name, Type($4)});
+    symbol_table_stack.insert({$2.name, *$4});
     $$ = $4;
 }
 | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
-    if ($4 != $6) 
-        typeerror();
-    
-    symbol_table.insert({$2.name, Type($4)});
+    check_type($4, $6) 
+    symbol_table.insert({$2.name, *$4});
     $$ = $4;
 }
 | KW_VAR ID OP_ASSIGN exp {
-    symbol_table.insert({$2.name, Type($4)});
+    symbol_table.insert({$2.name, *$4});
     $$ = $4;
 }
 ;
 
 opt_proc_return_type : /*empty*/ {
-    $$ = TYPE_VOID;
+    $$ = std::make_shared<Type>(Void);
 }
 | KW_COLUMN type {
     $$ = $2;
 }
 ;
 
-proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN opt_proc_return_type KW_BEGIN 
-                proc_body KW_END {
-                    std::vector<Type> param_list = symbol_table_stack.top().get_types();
-                    symbol_table_stack.close_scope();
-                    symbol_table_stack.insert({$3.name, param_list, Type($7)});
-                    $$ = $7;
-                }
+proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN
+            opt_proc_return_type KW_BEGIN proc_body KW_END {
+              // TODO check if opt_proc_return_type($7) matches return_stmt in proc_body
+              symbol_table_stack.close_scope();
+              symbol_table_stack.insert({$3.name, Type(Proc, *$5, $7)});
+          }
           ; 
 
-proc_body : opt_stmt_list { $$ = $1; }
-          | opt_decl_list KW_IN opt_stmt_list{ $$ = $3; }
+proc_body : opt_stmt_list {}
+          | opt_decl_list KW_IN opt_stmt_list {}
           ;
 
 rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramfield_decl_list_semicolumn CLOSE_CURLY {
     SymbolTable struct_table = symbol_table_stack.top();
     symbol_table_stack.close_scope();
-    symbol_table_stack.insert({$3.name, Type($3.name, &struct_table)});
+    symbol_table_stack.insert({$3.name, Type(Struct, $3.name, &struct_table)});
 }
 ;
 
-paramfield_decl : ID KW_COLUMN type {}
+paramfield_decl : ID KW_COLUMN type {
+                    symbol_table_stack.insert({$1.name, $3});
+                    $$ = std::make_shared<Type>($3);
+                }
                 ;
 
-opt_paramfield_decl_list_comma : /* empty */
-                               | paramfield_decl_list_comma {}
+opt_paramfield_decl_list_comma : /* empty */ {$$ = make_shared<TypeList>();}
+                               | paramfield_decl_list_comma { $$ = $1; }
                                ;
 
 opt_paramfield_decl_list_semicolumn : /* empty */
                                     | paramfield_decl_list_semicolumn {}
                                     ;
 
-paramfield_decl_list_comma : paramfield_decl {}
-                           | paramfield_decl KW_COMMA paramfield_decl_list_comma {}
+paramfield_decl_list_comma : paramfield_decl {
+                               $$ = std::make_shared<TypeList>();
+                               $$.get()->push_back($1);
+                           }
+                           // TODO check this
+                           | paramfield_decl_list_comma KW_COMMA paramfield_decl {
+                               $$ = $1;
+                               $$.get()->push_back($3);
+                           }
                            ;
 
 paramfield_decl_list_semicolumn : paramfield_decl {}
@@ -247,27 +288,27 @@ exp : exp OP_AND exp {
 
     | exp OP_SMALLER exp  {
         check_type_comp_op($1, $3); 
-        $$ = $1;
+        $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_SMALLER_OR_EQ exp  {
         check_type_comp_op($1, $3); 
-        $$ = $1;
+        $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_GREATER exp  {
         check_type_comp_op($1, $3); 
-        $$ = $1;
+        $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_GREATER_OR_EQ exp  {
         check_type_comp_op($1, $3); 
-        $$ = $1;
+        $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_EQUAL exp  {
         check_type_comp_op($1, $3); 
-        $$ = $1;
+        $$ = std::make_shared<Type>(Bool);
     }
     | exp OP_NOT_EQUAL exp  {
         check_type_comp_op($1, $3); 
-        $$ = $1;
+        $$ = std::make_shared<Type>(Bool);
     }
 
     | exp OP_ADD exp {
@@ -291,51 +332,98 @@ exp : exp OP_AND exp {
         $$ = $1;
     }
     | OP_SUB exp %prec UMINUS {
-        check_type_arith_op($1, $3); 
-        $$ = $1;
+        check_type_arith_op($2, $2); 
+        $$ = $2;
     }
-
     | literal { $$ = $1; }
-    | call_stmt {$$ = $1; }
-    | KW_NEW ID {}
-    | var {}
-    | ref_var {}
-    | deref_var {}
-    | OPEN_PAREN exp CLOSE_PAREN {$$ = $2; }
+    | call_stmt { $$ = $1; }
+    | KW_NEW ID { 
+        Type id_type;
+        symbol_table_stack.consult($2.name, id_type);
+        if (id_type->base_type != Struct) 
+            yyerror("Use new keyword only to instantiate structs");
+
+        $$ = std::make_shared<Type>(Struct, $2.name); 
+    }
+    | var { $$ = $1; }
+    | ref_var { $$ = $1; }
+    | deref_var { $$ = $1; }
+    | OPEN_PAREN exp CLOSE_PAREN { $$ = $2; }
     ;
 
-ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN {}
+ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = std::make_shared<Type>(Ref, $3); }
 
-deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN {}
-          | KW_DEREF OPEN_PAREN deref_var CLOSE_PAREN {}
+deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN { 
+              if ($3->base_type != Ref) 
+                  yyerror("Trying to deref a non ref type");
+              $$ = $3->referenced_type; 
+          }
+          | KW_DEREF OPEN_PAREN deref_var CLOSE_PAREN { 
+              if ($3->base_type != Ref) 
+                  yyerror("Trying to deref a non ref type");
+              $$ = $3->referenced_type; 
+          }
           ;
 
-var : ID {}
-    | exp KW_DOT ID {}
-    ;
+var : ID { 
+    Type id_type;
+    if (!symbol_table_stack.consult($1.name, id_type)) {
+        std::string error_message = "var \'"
+        error_message += $1.name;
+        error_message += "\' not declared";
+        yyerror(error_message.c_str());
+    }
+    
+    $$ = std::make_shared<Type>(id_type); 
+}
+| exp KW_DOT ID {
+    std::string struct_name = $1->struct_type_name;
+    if ($1->base_type != Struct) 
+        yyerror("Use the dot reference operation only for structs");
+
+    Type struct_type, member_type;
+    if (!symbol_table_stack.consult(struct_name, struct_type)) {
+        // Should never fall here
+        std::string error_message = "struct \'";
+        error_message += struct_name;
+        error_message += "\' not declared";
+        yyerror(error_message.c_str());
+    }
+
+    if (!struct_type.symbol_table.consult($3.name, member_type)) {
+        std::string error_message = "No member \'";
+        error_message += $3.name;
+        error_message += "\' in ";
+        error_message += struct_name;
+        yyerror(error_message.c_str());
+    }
+    
+    $$ = std::make_shared<Type>(member_type); 
+}
+;
 
 literal : FLOAT_LITERAL {
-    $$ = TYPE_FLOAT;
+    $$ = std::make_shared<Type>(Float);
 }
 | INT_LITERAL {
-    $$ = TYPE_INT;
+    $$ = std::make_shared<Type>(Int);
 }
 | STRING_LITERAL {
-    $$ = TYPE_STRING;
+    $$ = std::make_shared<Type>(String);
 }
 | bool_literal { 
     $$ = $1; 
 } 
 | KW_NULL {
-    $$ = TYPE_REFERENCE;
+    $$ = std::make_shared<Type>(Ref, nullptr);
 }
 ;
 
 bool_literal : KW_TRUE {
-    $$ = TYPE_BOOL;
+    $$ = std::make_shared<Type>(Bool);
 }
 | KW_FALSE {
-    $$ = TYPE_BOOL;
+    $$ = std::make_shared<Type>(Bool);
 }
 ;
 
@@ -361,18 +449,61 @@ if_stmt : KW_IF exp KW_THEN opt_stmt_list opt_else_stmt KW_FI {}
 while_stmt : KW_WHILE exp KW_DO opt_stmt_list KW_OD {}
            ;
 
-return_stmt : KW_RETURN exp {}
-            ;
+return_stmt : KW_RETURN exp {
+    $$ = $2;
+}
+;
 
-opt_exp_list : /* empty */ {}
-             | exp_list {}
-             ;
+opt_arguments_list : /* empty */ { $$ = std::make_shared<TypeList>(); }
+                   | argument_list { $$ = $1; }
+                   ;
 
-exp_list : exp {}
-         | exp_list KW_COMMA exp {}
+argument_list : exp { 
+                  $$ = std::make_shared<TypeList>();
+                  $$.get()->push_back($1);
+              }
+              // TODO check this
+              | argument_list KW_COMMA exp {
+                  $$ = $1;
+                  $$.get()->push_back($3);
+              }
 
-call_stmt : ID OPEN_PAREN opt_exp_list CLOSE_PAREN {}
-          ;
+call_stmt : ID OPEN_PAREN opt_argument_list CLOSE_PAREN {
+    Type proc_type;
+    if (!symbol_table_stack.consult($1.name, proc_type)) {
+        std::string error_message = "procedure \'";
+        error_message += $1.name;
+        error_message += "\' not declared"
+        yyerror(error_message.c_str())
+    }
+
+    // TODO check parameters types
+    TypeList param_types = *$3;
+    TypeList expected_param_types = *proc_type->param_types;
+    if (param_types.size() != expected_param_types.size()) {
+        std::string error_message = "Procedure \'";
+        error_message += $1.name;
+        error_message += "\' expected ";
+        error_message += std::to_string(expected_param_types.size());
+        error_message += " arguments, but received ";
+        error_message += std::to_string(param_types.size());
+        yyerror(error_message.c_str());
+    }
+    
+    for (int idx = 0; idx < param_types.size(); ++idx) {
+        if (!types_match(param_types[idx], expected_param_types[idx])) {
+            std::string error_message = "Argument ";
+            error_message += std::to_string(idx);
+            error_message += " does not match expected type for procedure \'";
+            error_message += $1.name;
+            error_message += "\'";
+            yyerror(error_message);
+        }
+    }
+     
+    $$ = std::make_shared<Type>(proc_type->return_type);
+}
+;
 
 do_while_stmt : KW_DO do_while_opt_stmt_list {symbol_table_stack.open_scope();} KW_OD {
     symbol_table_stack.close_scope();
@@ -382,18 +513,18 @@ do_while_stmt : KW_DO do_while_opt_stmt_list {symbol_table_stack.open_scope();} 
 do_while_opt_stmt_list : /* empty */ {}
                        | if_stmt {}
                        | assign_stmt {}
-                       | return_stmt { $$ = $1; }
+                       | return_stmt {}
                        | call_stmt {}
                        | do_while_stmt {}
                        | KW_EXIT KW_WHEN exp {}
                        ;
 
-type : KW_FLOAT { $$ = TYPE_FLOAT; }
-     | KW_INT { $$ = TYPE_INT; }
-     | KW_STRING { $$ = TYPE_STRING; }
-     | KW_BOOL { $$ = TYPE_BOOL; }
-     | ID { $$ = TYPE_STRUCT; }
-     | KW_REF OPEN_PAREN type CLOSE_PAREN { $$ = TYPE_REF; }
+type : KW_FLOAT { $$ = std::make_shared<Type>(Float); }
+     | KW_INT { $$ = std::make_shared<Type>(Int); }
+     | KW_STRING { $$ = std::make_shared<Type>(String); }
+     | KW_BOOL { $$ = std::make_shared<Type>(Bool); }
+     | ID { $$ = std::make_shared<Type>(Struct, $1.name); }
+     | KW_REF OPEN_PAREN type CLOSE_PAREN { $$ = std::make_shared<Type>(Ref, std::make_shared<Type>($3)); }
      ;
 
 %%
