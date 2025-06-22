@@ -12,6 +12,9 @@ Type::Type(BaseType base_type, std::vector<Type *> parem_types,
     : base_type(base_type), param_types(parem_types),
       return_type(return_type) {};
 
+Type::Type(BaseType base_type, std::string struct_type_name)
+    : base_type(base_type), struct_type_name(struct_type_name) {}
+
 Type::Type(BaseType base_type, std::string struct_type_name,
            SymbolTable *symbol_table_cp)
     : base_type(base_type), struct_type_name(struct_type_name) {
