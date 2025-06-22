@@ -283,8 +283,8 @@ not {
     return CLOSE_CURLY;
 } 
 {NAME} {
-    yylval.id.simble = new char[yyleng + 1];
-    strcpy(yylval.id.simble, yytext);
+    yylval.id.name = new char[yyleng + 1];
+    strcpy(yylval.id.name, yytext);
     yylval.id.line = curr_line;
     yylval.id.column = curr_column;
     curr_column += yyleng;
