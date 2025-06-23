@@ -1,0 +1,11 @@
+/*
+ * This is an example of a program in the comp25 language, with an type error
+ */
+program main
+begin 
+    procedure main() : int
+    begin
+        return 1.1  // Type error, return should be an int
+    end
+end
+
