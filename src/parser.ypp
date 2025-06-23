@@ -48,11 +48,11 @@ std::string type_name(TypePtr type) {
 
 void assert_type(TypePtr lhs, TypePtr rhs) {
     if (lhs->base_type != rhs->base_type)
-        yyerror("Type mismatch");
+        yyerror("Type mismatched");
     if (lhs->base_type == Ref)
         assert_type(lhs->referenced_type, rhs->referenced_type);
     if (lhs->base_type == Struct && lhs->struct_type_name != rhs->struct_type_name)
-        yyerror("Type mismatch");
+        yyerror("Type mismatched");
 }
 
 bool types_match(TypePtr lhs, TypePtr rhs) {
@@ -488,8 +488,12 @@ bool_literal : KW_TRUE {
 }
 ;
 
-assign_stmt : var OP_ASSIGN exp {}
-            | deref_var OP_ASSIGN exp {}
+assign_stmt : var OP_ASSIGN exp {
+                assert_type($1, $3);
+            }
+            | deref_var OP_ASSIGN exp {
+                assert_type($1, $3);
+            }
             ;
 
 opt_else_stmt : /* empty */ {}
