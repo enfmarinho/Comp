@@ -566,18 +566,23 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
 }
 ;
 
-do_while_stmt : KW_DO do_while_opt_stmt_list KW_OD {}
+do_while_stmt : KW_DO opt_do_while_stmt_list KW_OD {}
               ;
 
-do_while_opt_stmt_list : /* empty */ {}
-                       | if_stmt {}
-                       | assign_stmt {}
-                       | return_stmt {}
-                       | call_stmt {}
-                       | do_while_stmt {}
-                       | while_stmt {}
-                       | KW_EXIT KW_WHEN exp { assert_condition($3); }
-                       ;
+opt_do_while_stmt_list : /* empty */ {}
+                       | do_while_stmt_list
+
+do_while_stmt_list : do_while_stmt {}
+                   | do_while_stmt_list KW_SEMICOLUMN do_while_stmt {}
+
+do_while_stmt : if_stmt {}
+              | assign_stmt {}
+              | return_stmt {}
+              | call_stmt {}
+              | do_while_stmt {}
+              | while_stmt {}
+              | KW_EXIT KW_WHEN exp { assert_condition($3); }
+              ;
 
 type : KW_FLOAT { $$ = new Type(Float); }
      | KW_INT { $$ = new Type(Int); }

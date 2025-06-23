@@ -5,7 +5,7 @@ program main
 begin 
     procedure main()
     begin
-        var x: int;
+        var x: int
     in
         x := 0;
         do 
