@@ -1,0 +1,17 @@
+/*
+ * This is an example usage of a do_while loop with an type error in the comp25 language
+ */
+program main
+begin 
+    procedure main()
+    begin
+        var x: int
+    in
+        x := 0;
+        do 
+            x := x + " ";
+            exit when x >= 40
+        od 
+    end
+end
+
