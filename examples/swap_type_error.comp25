@@ -5,9 +5,9 @@ program main
 begin 
     procedure main()
     begin
-        var x: int;
+        var x: int
     in
-        x := 42.0; // Type error, there is no implicit cast
+        x := " "  // Type error, there is no implicit cast
     end
 end
 
