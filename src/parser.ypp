@@ -329,7 +329,7 @@ stmt : assign_stmt {}
          }
      }
      | call_stmt {}
-     | do_while_stmt {}
+     | do_while {}
      ;
 
 exp : exp OP_AND exp { 
@@ -566,7 +566,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
 }
 ;
 
-do_while_stmt : KW_DO opt_do_while_stmt_list KW_OD {}
+do_while : KW_DO opt_do_while_stmt_list KW_OD {}
               ;
 
 opt_do_while_stmt_list : /* empty */ {}
@@ -579,7 +579,6 @@ do_while_stmt : if_stmt {}
               | assign_stmt {}
               | return_stmt {}
               | call_stmt {}
-              | do_while_stmt {}
               | while_stmt {}
               | KW_EXIT KW_WHEN exp { assert_condition($3); }
               ;
