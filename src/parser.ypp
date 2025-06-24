@@ -8,14 +8,14 @@
 #include <cstdio>
 
 extern int yylex();
-extern int curr_line;
-extern int curr_column;
+extern int past_token_line;
+extern int past_token_column;
 
 TypePtr expected_proc_return_type = new Type(NoType);
 SymbolTableStack symbol_table_stack;
 
 void yyerror(const char *s) {
-    fprintf(stderr, "at line %i and column %i: %s\n", curr_line, curr_column, s);
+    fprintf(stderr, "at line %i and column %i: %s\n", past_token_line, past_token_column, s);
     exit(1); // Prematurely finish yacc execution with error
 }
 
