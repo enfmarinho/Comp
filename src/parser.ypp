@@ -46,13 +46,21 @@ std::string type_name(TypePtr type) {
     return "";
 }
 
-void assert_type(TypePtr lhs, TypePtr rhs) {
+void assert_type(TypePtr lhs, TypePtr rhs, std::string error_message="") {
+    if (error_message == "") {
+        error_message = "Mismatched types: "; 
+        error_message += "expected ";
+        error_message += type_name(lhs);
+        error_message += " but found ";
+        error_message += type_name(rhs);
+    }
+
     if (lhs->base_type != rhs->base_type)
-        yyerror("Type mismatched");
+        yyerror(error_message.c_str());
     if (lhs->base_type == Ref)
         assert_type(lhs->referenced_type, rhs->referenced_type);
     if (lhs->base_type == Struct && lhs->struct_type_name != rhs->struct_type_name)
-        yyerror("Type mismatched");
+        yyerror(error_message.c_str());
 }
 
 bool types_match(TypePtr lhs, TypePtr rhs) {
@@ -67,15 +75,23 @@ bool types_match(TypePtr lhs, TypePtr rhs) {
 }
 
 void assert_type_comp_op(TypePtr lhs, TypePtr rhs) {
-    assert_type(lhs, rhs);
     if (lhs->base_type != Int and lhs->base_type != Float) 
         yyerror("Comparison operations must be performed for int or for float");
+    std::string error_message = "Trying to perform an comparison operation with different type variables: ";
+    error_message += type_name(lhs);
+    error_message += " and ";
+    error_message += type_name(rhs);
+    assert_type(lhs, rhs, error_message);
 }
 
 void assert_type_arith_op(TypePtr lhs, TypePtr rhs) {
-    assert_type(lhs, rhs);
     if (lhs->base_type != Int and lhs->base_type != Float) 
         yyerror("Arithmetic operations must be performed only on int types or float types");
+    std::string error_message = "Trying to perform an arithmetic operation with different type variables: ";
+    error_message += type_name(lhs);
+    error_message += " and ";
+    error_message += type_name(rhs);
+    assert_type(lhs, rhs, error_message);
 }
 
 void assert_bool(TypePtr i) {
@@ -333,13 +349,13 @@ stmt : assign_stmt {}
      ;
 
 exp : exp OP_AND exp { 
-        assert_type($1, $3); 
         assert_bool($1);
+        assert_bool($3);
         $$ = new Type(*$1);
     }
     | exp OP_OR exp {
-        assert_type($1, $3); 
         assert_bool($1);
+        assert_bool($3);
         $$ = new Type(*$1);
     }
     | OP_NOT exp %prec OP_NOT {
