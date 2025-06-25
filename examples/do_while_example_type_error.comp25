@@ -10,7 +10,7 @@ begin
         x := 0;
         do 
             x := x + " ";
-            exit when x >= 40
+            exit when x >= 40.0
         od 
     end
 end

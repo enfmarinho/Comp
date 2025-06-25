@@ -19,7 +19,7 @@ begin
         var y: Another := new Another
     in
         x.x := y.i; // This should work
-        x := y     // This is a type error
+        x := y      // This is a type error
     end
 end
 

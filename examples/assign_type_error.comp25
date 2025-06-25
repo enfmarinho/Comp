@@ -7,7 +7,8 @@ begin
     begin
         var x: int
     in
-        x := " "  // Type error, there is no implicit cast
+        x := " "; // Type error 
+        x := 1.0  // Type error, there is no implicit cast
     end
 end
 
