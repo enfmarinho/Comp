@@ -16,7 +16,6 @@ SymbolTableStack symbol_table_stack;
 
 void yyerror(const char *s) {
     fprintf(stderr, "at line %i and column %i: %s\n", past_token_line, past_token_column, s);
-    exit(1); // Prematurely finish yacc execution with error
 }
 
 std::string type_name(TypePtr type) {
