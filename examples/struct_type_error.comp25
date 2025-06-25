@@ -1,0 +1,25 @@
+/*
+ * This is an example usage of a struct the comp25 language, with an type error
+ */
+program main
+begin 
+    struct Position {
+        x : float;
+        y : float
+    };
+
+    struct Another {
+        i : float;
+        j : float
+    };
+
+    procedure main()
+    begin
+        var x: Position := new Position;
+        var y: Another := new Another
+    in
+        x.x := y.i; // This should work
+        x := y     // This is a type error
+    end
+end
+
