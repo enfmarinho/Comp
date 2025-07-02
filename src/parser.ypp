@@ -360,6 +360,20 @@ rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramf
     SymbolTable struct_table = symbol_table_stack.top();
     symbol_table_stack.close_scope();
     symbol_table_stack.insert({$3.name, Type(Struct, $3.name, &struct_table)});
+    std::string struct_decl = "struct ";
+    struct_decl += $3.name;
+    struct_decl += "{\n";
+
+    auto entries = struct_table.get_entries();
+    for (auto entry : entries) {
+        struct_decl += type_name(entry.second);
+        struct_decl += " ";
+        struct_decl += entry.first;
+        struct_decl += ";\n";
+    }
+
+    struct_decl += "};\n";
+    decl_buf.push_back(struct_decl);
 }
 ;
 
