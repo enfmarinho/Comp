@@ -13,6 +13,14 @@
         curr_column += yyleng;
     }
 
+    void update_literal_info() {
+        yylval.literal_value.value = new char[yyleng + 1];
+        strcpy(yylval.literal_value.value, yytext);
+        yylval.literal_value.line = curr_line;
+        yylval.literal_value.column = curr_column;
+        curr_column += yyleng;
+    }
+
     void update_token_pos() {
         past_token_line = curr_token_line;
         past_token_column = curr_token_column;
@@ -69,32 +77,19 @@ STRING_LITERAL \".*\"
 
 {INT_LITERAL} {
     update_token_pos();
-
-    yylval.int_value.value = std::atoi(yytext);
-    yylval.int_value.line = curr_line;
-    yylval.int_value.column = curr_column;
-    curr_column += yyleng;
+    update_literal_info();
 
     return INT_LITERAL;
 }
 {FLOAT_LITERAL} {
     update_token_pos();
-
-    yylval.float_value.value = std::atof(yytext);
-    yylval.float_value.line = curr_line;
-    yylval.float_value.column = curr_column;
-    curr_column += yyleng;
+    update_literal_info();
 
     return FLOAT_LITERAL;
 } 
 {STRING_LITERAL} {
     update_token_pos();
-
-    yylval.string_value.value = new char[yyleng + 1];
-    strcpy(yylval.string_value.value, yytext);
-    yylval.string_value.line = curr_line;
-    yylval.string_value.column = curr_column;
-    curr_column += yyleng;
+    update_literal_info();
 
     return STRING_LITERAL;
 }
