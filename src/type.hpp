@@ -19,7 +19,7 @@ struct Type {
 
   Type(BaseType base_type, Type *referenced_type);
 
-  Type(BaseType base_type, std::vector<Type *> parem_types, Type *return_type);
+  Type(BaseType base_type, std::vector<Type *> param_types, Type *return_type);
 
   Type(BaseType base_type, std::string struct_type_name);
 
