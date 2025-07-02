@@ -36,3 +36,11 @@ void SymbolTable::remove(const std::string &id) {
     symbol_table.erase(last);
   }
 }
+
+std::vector<std::pair<std::string, Type>> SymbolTable::get_entries() {
+  std::vector<std::pair<std::string, Type>> entries;
+  for (auto entry : symbol_table)
+    entries.push_back(entry);
+
+  return entries;
+}

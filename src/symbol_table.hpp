@@ -19,6 +19,8 @@ public:
   /// Removes the last inserted element that matches "id"
   void remove(const std::string &id);
 
+  std::vector<std::pair<std::string, Type>> get_entries();
+
 private:
   std::unordered_multimap<std::string, Type> symbol_table;
 };
