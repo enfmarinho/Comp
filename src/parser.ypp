@@ -3,6 +3,8 @@
 #include "symbol_table.hpp"
 #include "symbol_table_stack.hpp"
 #include <cstdlib>
+#include <vector>
+#include <ifstream>
 #include "type.hpp"
 
 #include <cstdio>
@@ -10,6 +12,21 @@
 extern int yylex();
 extern int past_token_line;
 extern int past_token_column;
+extern std::ifstream file_out;
+
+struct Data {
+  std::string var_name;
+  std::string label; 
+  std::string label_true, label_false; // For if stmt
+  StmtListType stmt_list;
+  Type type;
+
+  Data(std::string var_name, std::string label, std::string label_true, std::string label_false
+        StmtListType stmt_list, Type type) : var_name(var_name), label(label),
+                                            label_true(label_true), label_false(label_false)
+                                            stmt_list(stmt_list), type(type) {}
+};
+
 struct Literal {
     Type type;
     std::string lexema;
@@ -22,6 +39,54 @@ struct Literal {
 
 TypePtr expected_proc_return_type = new Type(NoType);
 SymbolTableStack symbol_table_stack;
+
+StmtListType decl_buf;
+StmtListType label_buf;
+
+int lc = 0; // label counter
+int vc = 0; // var counter
+
+StmtListType conc_list(StmtListType lhs, StmtListType rhs) {
+    StmtListType stmt_list;
+    for (std::string decl : lhs) {
+        stmt_list.push_back(decl);
+    }
+    for (std::string decl : rhs) {
+        stmt_list.push_back(decl);
+    }
+    return stmt_list;
+}
+
+std::string new_var(Type type, std::string var_name="") {
+    if (var_name == "")
+        std::string var_name = "t" + to_string(vc++);
+
+    decl_buf.push_back(type_name(type) + " " + var_name + ";\n");
+    return var_name;
+}
+
+std::string new_label(StmtListType buf, std::string label_name="") {
+    if (label_name == "")
+        std::string label_name = "l" + std::to_string(lc++);
+
+    label_buf.push_back(label_name + ": \n");
+    for (std::string s : buf) {
+        label_buf.push_back(s);
+    }
+    return label_name;
+}
+
+void flush_file() {
+    for (std::string decl : decl_buf) {
+        file_out << decl;
+    }
+
+    file_out << "int main() {\n";
+    for (std::strint label : label_buf) {
+        file_out << label;
+    }
+    file_out << "}";
+}
 
 void yyerror(const char *s) {
     fprintf(stderr, "at line %i and column %i: %s\n", past_token_line, past_token_column, s);
@@ -118,6 +183,7 @@ void assert_condition(TypePtr type) {
     #include <vector>
     #include "type.hpp"
 
+    using StmtListType = std::vector<std::string>;
     using TypePtr = Type*;
     using TypeList = std::vector<TypePtr>;
     using TypeListPtr = TypeList*;
@@ -137,11 +203,12 @@ void assert_condition(TypePtr type) {
     } general_values;
     TypePtr type;
     TypeListPtr type_list;
+    Data* data;
     Literal* literal;
 } 
 
 // %destructor { delete $$.name; } <id>
-// %destructor { delete $$.value; } <string_value>
+// %destructor { delete $$.value; } <literal_value>
 // %destructor { delete $$; } <type>
 // %destructor { delete $$; } <type_list>
 
@@ -202,14 +269,15 @@ void assert_condition(TypePtr type) {
 %token <general_values> CLOSE_CURLY
 
 %type <type> type
-%type <type> exp
+%type <data> exp
 %type <literal> literal
 %type <literal> bool_literal
 %type <type> var
 %type <type> deref_var
 %type <type> ref_var
-%type <type> call_stmt
+%type <data> call_stmt
 %type <type> return_stmt
+%type <data> if_stmt
 %type <type> opt_proc_return_type
 %type <type> paramfield_decl
 
@@ -352,81 +420,153 @@ stmt : assign_stmt {}
 exp : exp OP_AND exp { 
         assert_bool($1);
         assert_bool($3);
-        $$ = new Type(*$1);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "&&" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$1));
     }
     | exp OP_OR exp {
         assert_bool($1);
         assert_bool($3);
-        $$ = new Type(*$1);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "||" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$1));
     }
     | OP_NOT exp %prec OP_NOT {
         assert_bool($2);
-        $$ = new Type(*$2);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = $2->stmt_list;
+        stmt_list.push_back(var_name + " = !" + $2->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$1));
     }
 
     | exp OP_SMALLER exp  {
         assert_type_comp_op($1, $3); 
-        $$ = new Type(Bool);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "<" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(Bool));
     }
     | exp OP_SMALLER_OR_EQ exp  {
         assert_type_comp_op($1, $3); 
-        $$ = new Type(Bool);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "<=" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(Bool));
     }
     | exp OP_GREATER exp  {
         assert_type_comp_op($1, $3); 
-        $$ = new Type(Bool);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + ">" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(Bool));
     }
     | exp OP_GREATER_OR_EQ exp  {
         assert_type_comp_op($1, $3); 
-        $$ = new Type(Bool);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + ">=" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(Bool));
     }
     | exp OP_EQUAL exp  {
         assert_type_comp_op($1, $3); 
-        $$ = new Type(Bool);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "==" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(Bool));
     }
     | exp OP_NOT_EQUAL exp  {
         assert_type_comp_op($1, $3); 
-        $$ = new Type(Bool);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "!=" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(Bool));
     }
 
     | exp OP_ADD exp {
         assert_type_arith_op($1, $3); 
-        $$ = new Type(*$1);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "+" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$1));
     }
     | exp OP_SUB exp {
         assert_type_arith_op($1, $3); 
-        $$ = new Type(*$1);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "-" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$1));
     }
     | exp OP_MULT exp {
         assert_type_arith_op($1, $3); 
-        $$ = new Type(*$1);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "*" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$1));
     }
     | exp OP_DIV exp {
         assert_type_arith_op($1, $3); 
-        $$ = new Type(*$1);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        stmt_list.push_back(var_name + " = " + $1->var_name + "/" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$1));
     }
     | exp OP_EXP exp {
         assert_type_arith_op($1, $3); 
-        $$ = new Type(*$1);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = conc_list($1->stmt_list, $3->stmt_list);
+        // TODO fix this later, OP_EXP is just a OP_MULT at the moment
+        stmt_list.push_back(var_name + " = " + $1->var_name + "*" + $3->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$1));
     }
     | OP_SUB exp %prec UMINUS {
         assert_type_arith_op($2, $2); 
-        $$ = new Type(*$2);
+
+        std::string var_name = new_var();
+        StmtListType stmt_list = $2->stmt_list;
+        stmt_list.push_back(var_name + " = -" + $2->var_name + ";\n");
+        $$ = new Data(var_name, "", "", "", stmt_list, Type(*$2));
     }
-    | literal { $$ = new Type(*$1); }
-    | call_stmt { $$ = new Type(*$1); }
+    | literal { 
+        $$ = new Data($1->lexema, "", "", "", {}, $1->type);
+    }
+    | call_stmt { 
+        $$ = new Data(*$1);
+    }
     | KW_NEW ID { 
         Type id_type;
         symbol_table_stack.consult($2.name, id_type);
         if (id_type.base_type != Struct) 
             yyerror("Use new keyword only to instantiate structs");
 
-        $$ = new Type(Struct, $2.name); 
+        Type type(Struct, $2.name)
+        std::string var_name = new_var(type);
+        $$ = new Data(var_name, "", "", "", {}, type); 
     }
-    | var { $$ = new Type(*$1); }
-    | ref_var { $$ = new Type(*$1); }
-    | deref_var { $$ = new Type(*$1); }
-    | OPEN_PAREN exp CLOSE_PAREN { $$ = new Type(*$2); }
+    | var { 
+    }
+    | ref_var { 
+    }
+    | deref_var { 
+    }
+    | OPEN_PAREN exp CLOSE_PAREN { 
+        $$ = new Data(*$2);
+    }
     ;
 
 ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = new Type(Ref, $3); }
