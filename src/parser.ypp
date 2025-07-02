@@ -108,12 +108,14 @@ std::string type_name(TypePtr type) {
         name += type->struct_type_name;
         return name;
     } else if (type->base_type == Ref) {
-        std::string name = "ref to ";
         name += type_name(type->referenced_type);
+        name += "*";
         return name;
+    } else if (type->base_type == Struct) {
+        return type->struct_type_name;
     } else {
         // Should not reach this, since does not make sence to call
-        // this functions when type is Procedure, Error or NoType
+        // this functions when type is Error or NoType
         assert("false");
     }
     return "";
