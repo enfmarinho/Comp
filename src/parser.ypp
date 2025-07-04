@@ -1,12 +1,14 @@
+// TODO error case 1: having a constructor for decl_list deleting $$, may very well free memory twice
+
 %{
 #include "parser.tab.hpp"
 #include "symbol_table.hpp"
 #include "symbol_table_stack.hpp"
+#include "type.hpp"
+
 #include <cstdlib>
 #include <vector>
 #include <ifstream>
-#include "type.hpp"
-
 #include <cstdio>
 
 extern int yylex();
@@ -39,7 +41,7 @@ TypePtr expected_proc_return_type = new Type(NoType);
 SymbolTableStack symbol_table_stack;
 
 StmtListType decl_buf;
-StmtListType label_buf;
+std::string current_end_do_while_label;
 
 int lc = 0; // label counter
 int vc = 0; // var counter
@@ -77,21 +79,12 @@ std::string new_var(Type type, std::string var_name="") {
     return var_name;
 }
 
-std::string new_label(StmtListType& buffer, std::string label="") {
-    if (label == "")
-        label = "l" + std::to_string(lc++);
-
-    label += ":\n";
-    buffer.push_back(label);
-
-    return label;
-}
-
 std::string new_label(std::string label="") {
     if (label == "")
-        label = "l" + std::to_string(lc++);
+        label = "l";
+    label += std::to_string(lc++);
 
-    return label + ":\n";
+    return label;
 }
 
 void flush_file(StmtListType instruction_list) {
@@ -305,8 +298,18 @@ void assert_condition(TypePtr type) {
 %type <data> var_decl
 %type <data> rec_decl
 %type <data> proc_decl
+%type <stmt_list> assign_stmt
+%type <data> opt_else_stmt
 
 %type <stmt_list> if_stmt
+%type <stmt_list> stmt
+%type <stmt_list> opt_stmt_list
+%type <stmt_list> stmt_list
+%type <stmt_list> while_stmt
+%type <stmt_list> do_while
+%type <stmt_list> opt_do_while_stmt_list
+%type <stmt_list> do_while_stmt_list
+%type <stmt_list> do_while_stmt
 
 %type <type> type
 %type <type> return_stmt
@@ -763,11 +766,32 @@ assign_stmt : var OP_ASSIGN exp {
             }
             ;
 
-opt_else_stmt : /* empty */ {}
-              | KW_ELSE opt_stmt_list {}
+opt_else_stmt : /* empty */ { 
+                  StmtListType stmt_list;
+                  std::string label = new_label();
+                  stmt_list->push_back(label + ":\n");
+                  $$ = new Data("", label, stmt_list, Type(NoType));
+              }
+              | KW_ELSE opt_stmt_list {
+                  StmtListType stmt_list;
+                  std::string label = new_label();
+                  stmt_list->push_back(label + ":\n");
+                  conc_list_in_place(stmt_list, *$2);
+                  $$ = new Data("", label, stmt_list, Type(NoType));
+              }
               ;
 
-if_stmt : KW_IF exp {assert_condition($2);} KW_THEN opt_stmt_list opt_else_stmt KW_FI {}
+if_stmt : KW_IF exp {assert_condition($2);} KW_THEN opt_stmt_list opt_else_stmt KW_FI {
+            StmtListType stmt_list;
+            stmt_list.push_back(std::string("if (!") + $2->var_name + ") goto " + $6->label + ";\n");
+            conc_list_in_place(stmt_list, $5->stmt_list);
+            std::string end_if_stmt_label = new_label();
+            stmt_list.push_back(std::string("goto ") + end_if_stmt_label + ";\n");
+            conc_list_in_place(stmt_list, $6->stmt_list);
+            stmt_list.push_back(end_if_stmt_label + ":\n");
+
+            $$ = new StmtListType(stmt_list);
+        }
         ;
 
 while_stmt : KW_WHILE exp {assert_condition($2);} KW_DO opt_stmt_list KW_OD {}
@@ -833,21 +857,53 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
 }
 ;
 
-do_while : KW_DO opt_do_while_stmt_list KW_OD {}
-              ;
+do_while : KW_DO {current_end_do_while_label = new_label("end_do_while");} opt_do_while_stmt_list KW_OD {
+             $$ = new StmtListType();
+             conc_list_in_place(*$$, *$3);
+             $$->push_back(current_end_do_while_label + ":\n");
+         }
+         ;
 
-opt_do_while_stmt_list : /* empty */ {}
-                       | do_while_stmt_list
+opt_do_while_stmt_list : /* empty */ {
+                           $$ = new StmtListType();
+                       }
+                       | do_while_stmt_list {
+                           $$ = new StmtListType();
+                           conc_list_in_place(*$$, *$1);
+                       }
 
-do_while_stmt_list : do_while_stmt {}
-                   | do_while_stmt_list KW_SEMICOLUMN do_while_stmt {}
+do_while_stmt_list : do_while_stmt {
+                       $$ = new StmtListType();
+                       conc_list_in_place(*$$, *$3);
+                   }
+                   | do_while_stmt_list KW_SEMICOLUMN do_while_stmt {
+                       // TODO see error case 1
+                       $$ = $1;
+                       conc_list_in_place(*$$, *$3);
+                   }
 
-do_while_stmt : if_stmt {}
-              | assign_stmt {}
-              | return_stmt {}
-              | call_stmt {}
-              | while_stmt {}
-              | KW_EXIT KW_WHEN exp { assert_condition($3); }
+do_while_stmt : if_stmt { 
+                  $$ = new data("", "", *$1, Type(None));
+              }
+              | assign_stmt {
+                  $$ = new data("", "", *$1, Type(None));
+              }
+              | return_stmt {
+                  // TODO check return_stmt type
+                  $$ = new data("", "", *$1, Type(None));
+              }
+              | call_stmt {
+                  $$ = new data("", "", $1->stmt_list, Type(None));
+              }
+              | while_stmt { 
+                  $$ = new data("", "", *$1, Type(None));
+              }
+              | KW_EXIT KW_WHEN exp { 
+                  assert_condition($3); 
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, $3->stmt_list);
+                  $$->push_back(std::string("goto ") + current_end_do_while_label + ";\n");
+              }
               ;
 
 type : KW_FLOAT { $$ = new Type(Float); }
