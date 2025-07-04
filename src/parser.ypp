@@ -482,17 +482,38 @@ paramfield_decl_list_semicolumn : paramfield_decl {
                                 }
                                 ;
 
-opt_stmt_list : /* empty */ {}
-              | stmt_list {}
+opt_stmt_list : /* empty */ {
+                  $$ = new StmtListType();
+              }
+              | stmt_list {
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, *$1);
+              }
               ;
 
-stmt_list : stmt {}
-          | stmt_list KW_SEMICOLUMN stmt {}
+stmt_list : stmt {
+              $$ = new StmtListType();
+              conc_list_in_place(*$$, *$1);
+          }
+          | stmt_list KW_SEMICOLUMN stmt {
+              // TODO see error case 1
+              $$ = $1;
+              conc_list_in_place(*$$, *$3);
+          }
           ;
 
-stmt : assign_stmt {}
-     | if_stmt {}
-     | while_stmt {} 
+stmt : assign_stmt { 
+         $$ = new StmtListType();
+         conc_list_in_place(*$$, *$1);
+     }
+     | if_stmt {
+         $$ = new StmtListType();
+         conc_list_in_place(*$$, *$1);
+     }
+     | while_stmt {
+         $$ = new StmtListType();
+         conc_list_in_place(*$$, *$1);
+     }
      | return_stmt { 
          if (!types_match($1, expected_proc_return_type)) {
              std::string error_message = "Mismatched types: returns ";
@@ -501,9 +522,18 @@ stmt : assign_stmt {}
              error_message += type_name(expected_proc_return_type);
              yyerror(error_message.c_str());
          }
+         $$ = new StmtListType();
+         // TODO check return_stmt type
+         conc_list_in_place(*$$, *$1);
      }
-     | call_stmt {}
-     | do_while {}
+     | call_stmt {
+         $$ = new StmtListType();
+         conc_list_in_place(*$$, $1->stmt_list);
+     }
+     | do_while {
+         $$ = new StmtListType();
+         conc_list_in_place(*$$, *$1);
+     }
      ;
 
 exp : exp OP_AND exp { 
