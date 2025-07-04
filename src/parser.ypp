@@ -857,6 +857,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
 }
 ;
 
+// TODO this is wrong, there should be a stmt_list->push_back("goto" + while_start) in case exp is true
 do_while : KW_DO {current_end_do_while_label = new_label("end_do_while");} opt_do_while_stmt_list KW_OD {
              $$ = new StmtListType();
              conc_list_in_place(*$$, *$3);
@@ -883,20 +884,25 @@ do_while_stmt_list : do_while_stmt {
                    }
 
 do_while_stmt : if_stmt { 
-                  $$ = new data("", "", *$1, Type(None));
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, *$1);
               }
               | assign_stmt {
-                  $$ = new data("", "", *$1, Type(None));
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, *$1);
               }
               | return_stmt {
                   // TODO check return_stmt type
-                  $$ = new data("", "", *$1, Type(None));
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, *$1);
               }
               | call_stmt {
-                  $$ = new data("", "", $1->stmt_list, Type(None));
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, $1->stmt_list);
               }
               | while_stmt { 
-                  $$ = new data("", "", *$1, Type(None));
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, *$1);
               }
               | KW_EXIT KW_WHEN exp { 
                   assert_condition($3); 
