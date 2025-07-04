@@ -15,16 +15,14 @@ extern int past_token_column;
 extern std::ifstream file_out;
 
 struct Data {
-  std::string var_name;
-  std::string label; 
-  std::string label_true, label_false; // For if stmt
-  StmtListType stmt_list;
-  Type type;
+    std::string var_name;
+    std::string label; 
+    StmtListType stmt_list;
+    Type type;
 
-  Data(std::string var_name, std::string label, std::string label_true, std::string label_false
-        StmtListType stmt_list, Type type) : var_name(var_name), label(label),
-                                            label_true(label_true), label_false(label_false)
-                                            stmt_list(stmt_list), type(type) {}
+    Data(std::string var_name, std::string label, 
+            StmtListType stmt_list, Type type) : var_name(var_name), label(label), 
+                                                 stmt_list(stmt_list), type(type) {}
 };
 
 struct Literal {
@@ -80,24 +78,31 @@ std::string new_var(Type type, std::string var_name="") {
 }
 
 std::string new_label(StmtListType buf, std::string label_name="") {
-    if (label_name == "")
-        std::string label_name = "l" + std::to_string(lc++);
+std::string new_label(StmtListType& buffer, std::string label="") {
+    if (label == "")
+        label = "l" + std::to_string(lc++);
 
-    label_buf.push_back(label_name + ": \n");
-    for (std::string s : buf) {
-        label_buf.push_back(s);
-    }
-    return label_name;
+    label += ":\n";
+    buffer.push_back(label);
+
+    return label;
 }
 
-void flush_file() {
+std::string new_label(std::string label="") {
+    if (label == "")
+        label = "l" + std::to_string(lc++);
+
+    return label + ":\n";
+}
+
+void flush_file(StmtListType instruction_list) {
     for (std::string decl : decl_buf) {
         file_out << decl;
     }
 
     file_out << "int main() {\n";
-    for (std::strint label : label_buf) {
-        file_out << label;
+    for (std::strint instruction : instruction_list) {
+        file_out << instruction;
     }
     file_out << "}";
 }
