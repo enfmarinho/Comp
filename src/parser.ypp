@@ -293,14 +293,11 @@ void assert_condition(TypePtr type) {
 %token <general_values> OPEN_CURLY
 %token <general_values> CLOSE_CURLY
 
-%type <type> type
-%type <data> exp
 %type <literal> literal
 %type <literal> bool_literal
-%type <type> var
-%type <type> deref_var
-%type <type> ref_var
+
 %type <data> call_stmt
+%type <data> exp
 %type <data> var
 %type <data> deref_var
 %type <data> ref_var
@@ -308,10 +305,12 @@ void assert_condition(TypePtr type) {
 %type <data> var_decl
 %type <data> rec_decl
 %type <data> proc_decl
+
+%type <stmt_list> if_stmt
+
+%type <type> type
 %type <type> return_stmt
-%type <data> if_stmt
 %type <type> opt_proc_return_type
-%type <type> paramfield_decl
 
 %type <data> paramfield_decl
 %type <data_list> opt_paramfield_decl_list_comma
@@ -319,6 +318,7 @@ void assert_condition(TypePtr type) {
 
 %type <data_list> opt_paramfield_decl_list_semicolumn
 %type <data_list> paramfield_decl_list_semicolumn
+
 %type <type_list> opt_arguments_list
 %type <type_list> argument_list
 %type <stmt_list> opt_decl_list
