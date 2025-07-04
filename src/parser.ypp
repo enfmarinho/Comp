@@ -57,6 +57,20 @@ StmtListType conc_list(StmtListType lhs, StmtListType rhs) {
     return stmt_list;
 }
 
+TypeList convert_to_type_list(DataList data_list) {
+    TypeList type_list;
+    for (Data data : data_list) {
+        type_list.push_back(data.type);
+    }
+    return type_list;
+}
+
+void conc_list_in_place(StmtListType &lhs, StmtListType rhs) {
+    for (std::string decl : rhs) {
+        lhs.push_back(decl);
+    }
+}
+
 std::string new_var(Type type, std::string var_name="") {
     if (var_name == "")
         std::string var_name = "t" + to_string(vc++);
@@ -189,6 +203,8 @@ void assert_condition(TypePtr type) {
     using TypePtr = Type*;
     using TypeList = std::vector<TypePtr>;
     using TypeListPtr = TypeList*;
+
+    using DataList = std::vector<Data*>;
 }
 
 %union {
@@ -206,8 +222,11 @@ void assert_condition(TypePtr type) {
     TypePtr type;
     TypeListPtr type_list;
     Data* data;
+    DataList* data_list
+
     Literal* literal;
-} 
+    StmtListType *stmt_list;
+}
 
 // %destructor { delete $$.name; } <id>
 // %destructor { delete $$.value; } <literal_value>
@@ -283,8 +302,12 @@ void assert_condition(TypePtr type) {
 %type <type> opt_proc_return_type
 %type <type> paramfield_decl
 
-%type <type_list> opt_paramfield_decl_list_comma
-%type <type_list> paramfield_decl_list_comma
+%type <data> paramfield_decl
+%type <data_list> opt_paramfield_decl_list_comma
+%type <data_list> paramfield_decl_list_comma
+
+%type <data_list> opt_paramfield_decl_list_semicolumn
+%type <data_list> paramfield_decl_list_semicolumn
 %type <type_list> opt_arguments_list
 %type <type_list> argument_list
 
@@ -347,7 +370,7 @@ opt_proc_return_type : /*empty*/ {
 proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_paramfield_decl_list_comma CLOSE_PAREN
             opt_proc_return_type {*expected_proc_return_type = *$7;} KW_BEGIN proc_body KW_END {
               symbol_table_stack.close_scope();
-              symbol_table_stack.insert({$3.name, Type(Procedure, *$5, $7)});
+              symbol_table_stack.insert({$3.name, Type(Procedure, convert_to_type_list(*$5), $7)});
               *expected_proc_return_type = Type(NoType);
           }
           ; 
@@ -364,49 +387,58 @@ rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramf
     struct_decl += $3.name;
     struct_decl += "{\n";
 
-    auto entries = struct_table.get_entries();
-    for (auto entry : entries) {
-        struct_decl += type_name(entry.second);
+    for (Data stmt : $5->stmt_list) {
+        struct_decl += type_name(data.type);
         struct_decl += " ";
-        struct_decl += entry.first;
+        struct_decl += data.var_name;
         struct_decl += ";\n";
     }
-
     struct_decl += "};\n";
-    decl_buf.push_back(struct_decl);
+
+    $$ = new Data("", "", {struct_decl}, Type(None));
 }
 ;
 
 paramfield_decl : ID KW_COLUMN type {
                     symbol_table_stack.insert({$1.name, *$3});
-                    $$ = new Type(*$3);
+                    $$ = new Data($1.name, "", {}, *$3);
                 }
                 ;
 
-opt_paramfield_decl_list_comma : /* empty */ {$$ = new TypeList();}
+opt_paramfield_decl_list_comma : /* empty */ { $$ = new DataList(); }
                                | paramfield_decl_list_comma { 
-                                   $$ = new TypeList();
-                                   *$$ = *$1; 
+                                   $$ = new DataList();
+                                   *$$ = *$1; // TODO probably needs to be explicity defined
                                }
                                ;
 
-opt_paramfield_decl_list_semicolumn : /* empty */
-                                    | paramfield_decl_list_semicolumn {}
+opt_paramfield_decl_list_semicolumn : /* empty */ { $$ = new Data_list(); }
+                                    | paramfield_decl_list_semicolumn {
+                                        $$ = new DataList();
+                                        *$$ = *$1;
+                                    }
                                     ;
 
 paramfield_decl_list_comma : paramfield_decl {
-                               $$ = new TypeList();
-                               $$->push_back($1);
+                               $$ = new DataList();
+                               $$->push_back(*$1);
                            }
                            | paramfield_decl_list_comma KW_COMMA paramfield_decl {
-                               $$ = new TypeList();
+                               $$ = new DataList();
                                *$$ = *$1;
-                               $$->push_back($3);
+                               $$->push_back(*$3);
                            }
                            ;
 
-paramfield_decl_list_semicolumn : paramfield_decl {}
-                                | paramfield_decl KW_SEMICOLUMN paramfield_decl_list_semicolumn {}
+paramfield_decl_list_semicolumn : paramfield_decl {
+                                    $$ = new DataList();
+                                    $$->push_back(*$1);
+                                }
+                                | paramfield_decl_list_semicolumn KW_SEMICOLUMN paramfield_decl {
+                                    $$ = new DataList();
+                                    *$$ = *$1;
+                                    $$->push_back(*$3);
+                                }
                                 ;
 
 opt_stmt_list : /* empty */ {}
