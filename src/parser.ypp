@@ -302,6 +302,9 @@ void assert_condition(TypePtr type) {
 %type <type> deref_var
 %type <type> ref_var
 %type <data> call_stmt
+%type <data> var
+%type <data> deref_var
+%type <data> ref_var
 %type <data> decl
 %type <data> var_decl
 %type <data> rec_decl
@@ -675,17 +678,19 @@ exp : exp OP_AND exp {
     }
     ;
 
-ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = new Type(Ref, $3); }
+ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = new Data($3->var_name, "", {}, Type(Ref, $3->type)); }
 
 deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN { 
               if ($3->base_type != Ref) 
                   yyerror("Trying to deref a non ref type");
-              $$ = new Type(*($3->referenced_type)); 
+
+              $$ = new Data(std::string("*") + $3->var_name, "", {}, *($3->referenced_type)); 
           }
           | KW_DEREF OPEN_PAREN deref_var CLOSE_PAREN { 
               if ($3->base_type != Ref) 
                   yyerror("Trying to deref a non ref type");
-              $$ = new Type(*($3->referenced_type)); 
+
+              $$ = new Data(std::string("*") + $3->var_name, "", {}, *($3->referenced_type)); 
           }
           ;
 
@@ -698,7 +703,7 @@ var : ID {
         yyerror(error_message.c_str());
     }
     
-    $$ = new Type(id_type); 
+    $$ = new Data($1.name, "", {}, Type(id_type)); 
 }
 | exp KW_DOT ID {
     std::string struct_name = $1->struct_type_name;
@@ -722,7 +727,7 @@ var : ID {
         yyerror(error_message.c_str());
     }
     
-    $$ = new Type(member_type); 
+    $$ = new Data($1->var_name + "." + id.name, "", {}, Type(member_type)); 
 }
 ;
 
