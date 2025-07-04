@@ -77,7 +77,6 @@ std::string new_var(Type type, std::string var_name="") {
     return var_name;
 }
 
-std::string new_label(StmtListType buf, std::string label_name="") {
 std::string new_label(StmtListType& buffer, std::string label="") {
     if (label == "")
         label = "l" + std::to_string(lc++);
