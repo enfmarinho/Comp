@@ -353,26 +353,32 @@ program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {
         ;
 
 opt_decl_list : /* empty */ { $$ = StmtListType(); }
-              | decl_list { *$$ = *$1; }
+              | decl_list { 
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, *$1);
+              }
               ;
 
 decl_list : decl {
               $$ = new StmtListType();
-              for (std::string stmt : $1->stmt_list) {
-                  $$->push_back(stmt);
-              }
+              conc_list_in_place($$, $1->stmt_list);
           }
           | decl_list KW_SEMICOLUMN decl {
-              *$$ = *$1;
-              for (std::string stmt : $3->stmt_list) {
-                  $$->push_back(stmt);
-              }
+              // TODO see error case 1
+              $$ = $1;
+              conc_list_in_place($$, $3->stmt_list);
           }
           ;
 
-decl : var_decl { *$$ = *$1; }
-     | proc_decl { *$$ = *$1; }
-     | rec_decl { *$$ = *$1; }
+decl : var_decl { 
+         $$ = new Data(*$1);
+     }
+     | proc_decl { 
+         $$ = new Data(*$1);
+     }
+     | rec_decl { 
+         $$ = new Data(*$1);
+     }
      ;
 
 var_decl : KW_VAR ID KW_COLUMN type {
