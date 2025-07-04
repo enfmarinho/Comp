@@ -302,6 +302,10 @@ void assert_condition(TypePtr type) {
 %type <type> deref_var
 %type <type> ref_var
 %type <data> call_stmt
+%type <data> decl
+%type <data> var_decl
+%type <data> rec_decl
+%type <data> proc_decl
 %type <type> return_stmt
 %type <data> if_stmt
 %type <type> opt_proc_return_type
@@ -315,6 +319,8 @@ void assert_condition(TypePtr type) {
 %type <data_list> paramfield_decl_list_semicolumn
 %type <type_list> opt_arguments_list
 %type <type_list> argument_list
+%type <stmt_list> opt_decl_list
+%type <stmt_list> decl_list
 
 // precedence related stuff
 %start program
@@ -339,28 +345,44 @@ void assert_condition(TypePtr type) {
 program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {}
         ;
 
-opt_decl_list : /* empty */ {}
-              | decl_list {}
+opt_decl_list : /* empty */ { $$ = StmtListType(); }
+              | decl_list { *$$ = *$1; }
               ;
 
-decl_list : decl {}
-          | decl_list KW_SEMICOLUMN decl {}
+decl_list : decl {
+              $$ = new StmtListType();
+              for (std::string stmt : $1->stmt_list) {
+                  $$->push_back(stmt);
+              }
+          }
+          | decl_list KW_SEMICOLUMN decl {
+              *$$ = *$1;
+              for (std::string stmt : $3->stmt_list) {
+                  $$->push_back(stmt);
+              }
+          }
           ;
 
-decl : var_decl {}
-     | proc_decl {}
-     | rec_decl {}
+decl : var_decl { *$$ = *$1; }
+     | proc_decl { *$$ = *$1; }
+     | rec_decl { *$$ = *$1; }
      ;
 
 var_decl : KW_VAR ID KW_COLUMN type {
     symbol_table_stack.insert({$2.name, *$4});
+    new_var(*$4, $2.name);
+    $$ = new Data("", "", {}, Type(None));
 }
 | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
     assert_type($4, $6);
     symbol_table_stack.insert({$2.name, *$4});
+    new_var(*$4, $2.name);
+    $$ = new Data("", "", {std::string($2.name) + " = " + $6->var_name + ";\n"}, Type(None));
 }
 | KW_VAR ID OP_ASSIGN exp {
     symbol_table_stack.insert({$2.name, *$4});
+    new_var($4->type, $2.name);
+    $$ = new Data("", "", {std::string($2.name) + " = " + $4->var_name + ";\n"}, Type(None));
 }
 ;
 
@@ -377,6 +399,7 @@ proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_pa
               symbol_table_stack.close_scope();
               symbol_table_stack.insert({$3.name, Type(Procedure, convert_to_type_list(*$5), $7)});
               *expected_proc_return_type = Type(NoType);
+              $$ = new Data(); // TODO 
           }
           ; 
 
