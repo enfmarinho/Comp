@@ -342,7 +342,9 @@ void assert_condition(TypePtr type) {
 
 %%
 
-program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {}
+program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {
+            flush_file($4);
+        }
         ;
 
 opt_decl_list : /* empty */ { $$ = StmtListType(); }
