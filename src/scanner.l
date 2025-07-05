@@ -7,9 +7,6 @@
     int past_token_line = 1, past_token_column = 0;
 
     void update_trivial_info() {
-        yylval.general_values.line = curr_line;
-        yylval.general_values.column = curr_column;
-
         curr_column += yyleng;
     }
 
