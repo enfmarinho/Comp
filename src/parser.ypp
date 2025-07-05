@@ -42,9 +42,11 @@ SymbolTableStack symbol_table_stack;
 
 StmtListType decl_buf;
 std::string current_end_do_while_label;
+std::vector<int> return_label_stack;
 
 int lc = 0; // label counter
 int vc = 0; // var counter
+int rlc = 0; // return label counter
 
 StmtListType conc_list(StmtListType lhs, StmtListType rhs) {
     StmtListType stmt_list;
@@ -91,12 +93,11 @@ std::string new_return_label() {
 }
 
 std::string return_func() {
-    std::string func;
-    for (int i = 0; i < return_stack.size(); ++i) {
-        func += "if (return_stack.top() == ";
+    std::string func = "return_label:\n";
+    for (int i = 0; i < return_label_stack.size(); ++i) {
+        func += "if (return_label_stack.top() == ";
         func += std::to_string(i);
-        func += ") goto ";
-        func += "rl";
+        func += ") goto rl";
         func += std::to_string(i);
         func += ";\n";
     }
@@ -324,9 +325,9 @@ void assert_condition(TypePtr type) {
 %type <stmt_list> opt_do_while_stmt_list
 %type <stmt_list> do_while_stmt_list
 %type <stmt_list> do_while_stmt
+%type <stmt_list> return_stmt
 
 %type <type> type
-%type <type> return_stmt
 %type <type> opt_proc_return_type
 
 %type <data> paramfield_decl
@@ -552,7 +553,6 @@ stmt : assign_stmt {
              yyerror(error_message.c_str());
          }
          $$ = new StmtListType();
-         // TODO check return_stmt type
          conc_list_in_place(*$$, *$1);
      }
      | call_stmt {
@@ -869,7 +869,10 @@ while_stmt : KW_WHILE exp {assert_condition($2);} KW_DO opt_stmt_list KW_OD {}
            ;
 
 return_stmt : KW_RETURN exp {
-    $$ = new Type(*$2);
+    $$ = new StmtListType();
+    conc_list_in_place($$, $2->stmt_list)
+    $$->stmt_list.push_back("returned_value = " + $2->var_name + ";\n");
+    $$->stmt_list.push_back("goto return_label;");
 }
 ;
 
@@ -928,9 +931,9 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
     }
      
     stmt_list.push_back(std::string("goto ") + $1.name);
-    std::string current_pos = new_label(); // TODO will this work ? 
-    stmt_list.push_back(current_pos + ":\n");
-    return_stack.push_back(current_pos);
+    std::string current_pos = new_return_label();
+    stmt_list.push_back(new_return_label + ":\n");
+    return_label_stack.push_back(current_pos);
     $$ = new Data("", "", stmt_list, Type(*(proc_type.return_type)));
 }
 ;
