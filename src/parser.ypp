@@ -86,6 +86,23 @@ std::string new_label(std::string label="") {
     return label;
 }
 
+std::string new_return_label() {
+    return "rl" + std::to_string(rlc++);
+}
+
+std::string return_func() {
+    std::string func;
+    for (int i = 0; i < return_stack.size(); ++i) {
+        func += "if (return_stack.top() == ";
+        func += std::to_string(i);
+        func += ") goto ";
+        func += "rl";
+        func += std::to_string(i);
+        func += ";\n";
+    }
+    return func;
+}
+
 void flush_file(StmtListType instruction_list) {
     for (std::string decl : decl_buf) {
         file_out << decl;
@@ -95,6 +112,7 @@ void flush_file(StmtListType instruction_list) {
     for (std::strint instruction : instruction_list) {
         file_out << instruction;
     }
+    file_out << return_func();
     file_out << "}";
 }
 
