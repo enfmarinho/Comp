@@ -80,9 +80,8 @@ std::string new_var(Type type, std::string var_name="") {
 }
 
 std::string new_label(std::string label="") {
-    if (label == "")
-        label = "l";
-    label += std::to_string(lc++);
+    if (label == "") 
+        label = "l" + std::to_string(lc++);
 
     return label;
 }
@@ -149,7 +148,7 @@ void assert_type(TypePtr lhs, TypePtr rhs, std::string error_message="") {
         yyerror(error_message.c_str());
 }
 
-bool types_match(TypePtr lhs, TypePtr rhs) {
+bool types_match(Type lhs, Type rhs) {
     if (lhs->base_type != rhs->base_type)
         return false;
     if (lhs->base_type == Ref)
@@ -322,8 +321,8 @@ void assert_condition(TypePtr type) {
 %type <data_list> opt_paramfield_decl_list_semicolumn
 %type <data_list> paramfield_decl_list_semicolumn
 
-%type <type_list> opt_arguments_list
-%type <type_list> argument_list
+%type <data_list> opt_arguments_list
+%type <data_list> argument_list
 %type <stmt_list> opt_decl_list
 %type <stmt_list> decl_list
 
@@ -479,8 +478,7 @@ paramfield_decl_list_comma : paramfield_decl {
                                $$->push_back(*$1);
                            }
                            | paramfield_decl_list_comma KW_COMMA paramfield_decl {
-                               $$ = new DataList();
-                               *$$ = *$1;
+                               $$ = $1;
                                $$->push_back(*$3);
                            }
                            ;
@@ -490,8 +488,7 @@ paramfield_decl_list_semicolumn : paramfield_decl {
                                     $$->push_back(*$1);
                                 }
                                 | paramfield_decl_list_semicolumn KW_SEMICOLUMN paramfield_decl {
-                                    $$ = new DataList();
-                                    *$$ = *$1;
+                                    $$ = *$1
                                     $$->push_back(*$3);
                                 }
                                 ;
@@ -529,7 +526,10 @@ stmt : assign_stmt {
          conc_list_in_place(*$$, *$1);
      }
      | return_stmt { 
-         if (!types_match($1, expected_proc_return_type)) {
+         if (types_match(expected_proc_return_type, Type(NoType))) {
+             yyerror("Return stmt must be declared only within a procedure scope");
+         }
+         if (!types_match(*$1, *expected_proc_return_type)) {
              std::string error_message = "Mismatched types: returns ";
              error_message += type_name($1);
              error_message += " expected ";
@@ -852,7 +852,7 @@ return_stmt : KW_RETURN exp {
 }
 ;
 
-opt_arguments_list : /* empty */ { $$ = new TypeList(); }
+opt_arguments_list : /* empty */ { $$ = new DataList(); }
                    | argument_list { 
                        $$ = new TypeList();
                        *$$ = *$1; 
@@ -861,12 +861,12 @@ opt_arguments_list : /* empty */ { $$ = new TypeList(); }
 
 argument_list : exp { 
                   $$ = new TypeList();
-                  $$->push_back($1);
+                  $$->push_back(*$1);
               }
               | argument_list KW_COMMA exp {
-                  $$ = new TypeList();
-                  *$$ = *$1;
-                  $$->push_back($3);
+                  // TODO see error case 1
+                  $$ = $1;
+                  $$->push_back(*$3);
               }
 
 call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
@@ -879,8 +879,8 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
     }
 
     // Check if number of arguments passed match with expected number of arguments
-    TypeList param_types = *$3;
-    TypeList expected_param_types = proc_type.param_types;
+    DataList param_types = *$3;
+    DataList expected_param_types = proc_type.param_types;
     if (param_types.size() != expected_param_types.size()) {
         std::string error_message = "Procedure \'";
         error_message += $1.name;
@@ -891,9 +891,10 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
         yyerror(error_message.c_str());
     }
     
-    // Check if arguments types match with expected types
+    // Check if arguments types match with expected types and initialize them
+    StmtListType stmt_list;
     for (int idx = 0; idx < param_types.size(); ++idx) {
-        if (!types_match(param_types[idx], expected_param_types[idx])) {
+        if (!types_match(param_types[idx].type, expected_param_types[idx].type)) {
             std::string error_message = "Argument ";
             error_message += std::to_string(idx);
             error_message += " does not match expected type for procedure \'";
@@ -901,9 +902,15 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
             error_message += "\'";
             yyerror(error_message.c_str());
         }
+
+        stmt_list.push_back(expected_param_types[idx].var_name + " = " + param_types[idx].var_name + ";\n");
     }
      
-    $$ = new Type(*proc_type.return_type);
+    stmt_list.push_back(std::string("goto ") + $1.name);
+    std::string current_pos = new_label(); // TODO will this work ? 
+    stmt_list.push_back(current_pos + ":\n");
+    return_stack.push_back(current_pos);
+    $$ = new Data("", "", stmt_list, Type(*(proc_type.return_type)));
 }
 ;
 
