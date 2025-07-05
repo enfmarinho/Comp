@@ -146,9 +146,11 @@ void assert_condition(TypePtr type) {
 }
 
 std::string new_var(Type type, std::string var_name="") {
-    if (var_name == "")
-        std::string var_name = "t" + std::to_string(vc++);
-
+    if (var_name == "") {
+        var_name = "t" + std::to_string(vc++);
+    } else {
+        // TODO must append std::to_string(vc++) to the end of var_name, but this has implications
+    }
     decl_buf.push_back(type_name(&type) + " " + var_name + ";\n");
     return var_name;
 }
@@ -169,11 +171,16 @@ std::string return_func() {
     std::string func = "return_label:\n";
     func += "if (return_keys_size == 0) return 1;\n";
     func += "return_keys_size--;\n";
+    std::string var_name = new_var(Type(Int));
     for (int i = 0; i < rlc; ++i) {
-        func += "if (return_keys[return_keys_size] == ";
-        func += std::to_string(i);
+        std::string is = std::to_string(i);
+        func += var_name;
+        func += " = return_keys[return_keys_size] == ";
+        func += is;
+        func += ";\nif (";
+        func += var_name;
         func += ") goto rl";
-        func += std::to_string(i);
+        func += is;
         func += ";\n";
     }
     return func;
@@ -184,8 +191,8 @@ void push_return_key(StmtListType stmt_list, int key) {
 }
 
 void flush_file(StmtListType instruction_list) {
-    decl_buf.push_back("int return_keys[1024];");
-    decl_buf.push_back("int return_keys_size = 0;");
+    decl_buf.push_back("int return_keys[1024];\n");
+    decl_buf.push_back("int return_keys_size = 0;\n");
 
     for (std::string decl : decl_buf) {
         file_out << decl;
@@ -195,7 +202,6 @@ void flush_file(StmtListType instruction_list) {
     for (std::string instruction : instruction_list) {
         file_out << instruction;
     }
-    file_out << return_func();
     file_out << "}";
 }
 
@@ -362,6 +368,7 @@ program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {
             if (!symbol_table_stack.consult("main", type)) {
                 yyerror("Missing entry point: a procedure named main has to be declared");
             }
+            $4->push_back(return_func());
             flush_file(*$4);
         }
         ;
