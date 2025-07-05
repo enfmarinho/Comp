@@ -809,10 +809,16 @@ bool_literal : KW_TRUE {
 ;
 
 assign_stmt : var OP_ASSIGN exp {
-                assert_type($1, $3);
+                assert_type($1->type, $3->type);
+                $$ = new StmtListType();
+                conc_list_in_place(*$$, $3->stmt_list);
+                $$->push_back($1->var_name + " = " + exp->var_name + ";\n");
             }
             | deref_var OP_ASSIGN exp {
-                assert_type($1, $3);
+                assert_type($1->type, $3->type);
+                $$ = new StmtListType();
+                conc_list_in_place(*$$, $3->stmt_list);
+                $$->push_back($1->var_name + " = " + exp->var_name + ";\n");
             }
             ;
 
