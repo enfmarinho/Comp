@@ -92,7 +92,7 @@ void flush_file(StmtListType instruction_list) {
         file_out << decl;
     }
 
-    file_out << "int main() {\n";
+    file_out << "int main() {\n  goto main;";
     for (std::strint instruction : instruction_list) {
         file_out << instruction;
     }
@@ -348,6 +348,10 @@ void assert_condition(TypePtr type) {
 %%
 
 program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {
+            Type type;
+            if (!symbol_table_stack.consult("main", type)) {
+                yyerror("Missing entry point: a procedure named main has to be declared");
+            }
             flush_file($4);
         }
         ;
