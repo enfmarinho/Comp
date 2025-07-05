@@ -326,6 +326,7 @@ void assert_condition(TypePtr type) {
 %type <stmt_list> do_while_stmt_list
 %type <stmt_list> do_while_stmt
 %type <stmt_list> return_stmt
+%type <stmt_list> proc_body
 
 %type <type> type
 %type <type> opt_proc_return_type
@@ -445,8 +446,12 @@ proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_pa
           }
           ; 
 
-proc_body : opt_stmt_list {}
-          | opt_decl_list KW_IN opt_stmt_list {}
+proc_body : opt_stmt_list { $$ = new StmtListType(*$1); }
+          | opt_decl_list KW_IN opt_stmt_list {
+              $$ = new StmtListType(); 
+              conc_list_in_place(*$$, *$1);
+              conc_list_in_place(*$$, *$3);
+          }
           ;
 
 rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramfield_decl_list_semicolumn CLOSE_CURLY {
