@@ -48,17 +48,6 @@ int lc = 0; // label counter
 int vc = 0; // var counter
 int rlc = 0; // return label counter
 
-StmtListType conc_list(StmtListType lhs, StmtListType rhs) {
-    StmtListType stmt_list;
-    for (std::string decl : lhs) {
-        stmt_list.push_back(decl);
-    }
-    for (std::string decl : rhs) {
-        stmt_list.push_back(decl);
-    }
-    return stmt_list;
-}
-
 void conc_list_in_place(StmtListType &lhs, StmtListType rhs) {
     for (std::string decl : rhs) {
         lhs.push_back(decl);
@@ -172,8 +161,8 @@ std::string new_label(std::string label="") {
     return label;
 }
 
-std::string new_return_label() {
-    return "rl" + std::to_string(rlc++);
+int new_return_label() {
+    return rlc++;
 }
 
 std::string return_func() {
@@ -213,6 +202,9 @@ void flush_file(StmtListType instruction_list) {
     using TypeListPtr = TypeList*;
 
     using DataList = std::vector<Data*>;
+
+    class Data;
+    class Literal;
 }
 
 %union {
@@ -573,7 +565,7 @@ exp : exp OP_AND exp {
         assert_bool(&$1->type);
         assert_bool(&$3->type);
 
-        std::string var_name = new_var(&$1->type);
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
@@ -584,7 +576,7 @@ exp : exp OP_AND exp {
         assert_bool(&$1->type);
         assert_bool(&$3->type);
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($3->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
@@ -597,13 +589,13 @@ exp : exp OP_AND exp {
         std::string var_name = new_var($2->type);
         StmtListType stmt_list = $2->stmt_list;
         stmt_list.push_back(var_name + " = !" + $2->var_name + ";\n");
-        $$ = new Data(var_name, "", $2->stmt_list, Type(*$2));
+        $$ = new Data(var_name, "", $2->stmt_list, Type($2->type));
     }
 
     | exp OP_SMALLER exp  {
-        assert_type_comp_op($1->type, $3->type); 
+        assert_type_comp_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
@@ -611,9 +603,9 @@ exp : exp OP_AND exp {
         $$ = new Data(var_name, "", stmt_list, Type(Bool));
     }
     | exp OP_SMALLER_OR_EQ exp  {
-        assert_type_comp_op($1->type, $3->type); 
+        assert_type_comp_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
@@ -621,9 +613,9 @@ exp : exp OP_AND exp {
         $$ = new Data(var_name, "", stmt_list, Type(Bool));
     }
     | exp OP_GREATER exp  {
-        assert_type_comp_op($1->type, $3->type); 
+        assert_type_comp_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
@@ -631,9 +623,9 @@ exp : exp OP_AND exp {
         $$ = new Data(var_name, "", stmt_list, Type(Bool));
     }
     | exp OP_GREATER_OR_EQ exp  {
-        assert_type_comp_op($1->type, $3->type); 
+        assert_type_comp_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
@@ -641,9 +633,9 @@ exp : exp OP_AND exp {
         $$ = new Data(var_name, "", stmt_list, Type(Bool));
     }
     | exp OP_EQUAL exp  {
-        assert_type_comp_op($1->type, $3->type); 
+        assert_type_comp_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
@@ -651,9 +643,9 @@ exp : exp OP_AND exp {
         $$ = new Data(var_name, "", stmt_list, Type(Bool));
     }
     | exp OP_NOT_EQUAL exp  {
-        assert_type_comp_op($1->type, $3->type); 
+        assert_type_comp_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
@@ -662,62 +654,62 @@ exp : exp OP_AND exp {
     }
 
     | exp OP_ADD exp {
-        assert_type_arith_op($1->type, $3->type); 
+        assert_type_arith_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
         stmt_list.push_back(var_name + " = " + $1->var_name + "+" + $3->var_name + ";\n");
-        $$ = new Data(var_name, "", stmt_list, Type(*$1));
+        $$ = new Data(var_name, "", stmt_list, Type($1->type));
     }
     | exp OP_SUB exp {
-        assert_type_arith_op($1->type, $3->type); 
+        assert_type_arith_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
         stmt_list.push_back(var_name + " = " + $1->var_name + "-" + $3->var_name + ";\n");
-        $$ = new Data(var_name, "", stmt_list, Type(*$1));
+        $$ = new Data(var_name, "", stmt_list, Type($1->type));
     }
     | exp OP_MULT exp {
-        assert_type_arith_op($1->type, $3->type); 
+        assert_type_arith_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
         stmt_list.push_back(var_name + " = " + $1->var_name + "*" + $3->var_name + ";\n");
-        $$ = new Data(var_name, "", stmt_list, Type(*$1));
+        $$ = new Data(var_name, "", stmt_list, Type($1->type));
     }
     | exp OP_DIV exp {
-        assert_type_arith_op($1->type, $3->type); 
+        assert_type_arith_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
         stmt_list.push_back(var_name + " = " + $1->var_name + "/" + $3->var_name + ";\n");
-        $$ = new Data(var_name, "", stmt_list, Type(*$1));
+        $$ = new Data(var_name, "", stmt_list, Type($1->type));
     }
     | exp OP_EXP exp {
-        assert_type_arith_op($1->type, $3->type); 
+        assert_type_arith_op(&$1->type, &$3->type); 
 
-        std::string var_name = new_var();
+        std::string var_name = new_var($1->type);
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
         // TODO fix this later, OP_EXP is just a OP_MULT at the moment
         stmt_list.push_back(var_name + " = " + $1->var_name + "*" + $3->var_name + ";\n");
-        $$ = new Data(var_name, "", stmt_list, Type(*$1));
+        $$ = new Data(var_name, "", stmt_list, Type($1->type));
     }
     | OP_SUB exp %prec UMINUS {
-        assert_type_arith_op($2->type, $2->type); 
+        assert_type_arith_op(&$2->type, &$2->type); 
 
-        std::string var_name = new_var();
-        stmt_list.push_back(var_name + " = -" + $2->var_name + ";\n");
-        $$ = new Data(var_name, "", $2->stmt_list, Type(*$2));
+        std::string var_name = new_var($2->type);
+        $$ = new Data(var_name, "", $2->stmt_list, Type($2->type));
+        $$->stmt_list.push_back(var_name + " = -" + $2->var_name + ";\n");
     }
     | literal { 
         $$ = new Data($1->lexema, "", {}, $1->type);
@@ -731,7 +723,7 @@ exp : exp OP_AND exp {
         if (id_type.base_type != Struct) 
             yyerror("Use new keyword only to instantiate structs");
 
-        Type type(Struct, $2.name)
+        Type type(Struct, $2.name);
         std::string var_name = new_var(type, $2.name);
         $$ = new Data(var_name, "", {}, type); 
     }
@@ -749,19 +741,19 @@ exp : exp OP_AND exp {
     }
     ;
 
-ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = new Data($3->var_name, "", {}, Type(Ref, $3->type)); }
+ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = new Data($3->var_name, "", {}, Type(Ref, &$3->type)); }
 
 deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN { 
-              if ($3->base_type != Ref) 
+              if ($3->type.base_type != Ref) 
                   yyerror("Trying to deref a non ref type");
 
-              $$ = new Data(std::string("*") + $3->var_name, "", {}, *($3->referenced_type)); 
+              $$ = new Data(std::string("*") + $3->var_name, "", {}, *($3->type.referenced_type)); 
           }
           | KW_DEREF OPEN_PAREN deref_var CLOSE_PAREN { 
-              if ($3->base_type != Ref) 
+              if ($3->type.base_type != Ref) 
                   yyerror("Trying to deref a non ref type");
 
-              $$ = new Data(std::string("*") + $3->var_name, "", {}, *($3->referenced_type)); 
+              $$ = new Data(std::string("*") + $3->var_name, "", {}, *($3->type.referenced_type)); 
           }
           ;
 
@@ -777,8 +769,8 @@ var : ID {
     $$ = new Data($1.name, "", {}, Type(id_type)); 
 }
 | exp KW_DOT ID {
-    std::string struct_name = $1->struct_type_name;
-    if ($1->base_type != Struct) 
+    std::string struct_name = $1->type.struct_type_name;
+    if ($1->type.base_type != Struct) 
         yyerror("Use the dot reference operation only for structs");
 
     Type struct_type, member_type;
@@ -798,18 +790,18 @@ var : ID {
         yyerror(error_message.c_str());
     }
     
-    $$ = new Data($1->var_name + "." + id.name, "", {}, Type(member_type)); 
+    $$ = new Data($1->var_name + "." + $3.name, "", {}, Type(member_type)); 
 }
 ;
 
 literal : FLOAT_LITERAL {
-    $$ = new Literal(Type(Float), $1.literal_value.float);
+    $$ = new Literal(Type(Float), $1.value);
 }
 | INT_LITERAL {
-    $$ = new Literal(Type(Int), $1.literal_value.value);
+    $$ = new Literal(Type(Int), $1.value);
 }
 | STRING_LITERAL {
-    $$ = new Literal(Type(String), $1.literal_value.value);
+    $$ = new Literal(Type(String), $1.value);
 }
 | bool_literal { 
     $$ = new Literal(*$1); 
@@ -828,38 +820,38 @@ bool_literal : KW_TRUE {
 ;
 
 assign_stmt : var OP_ASSIGN exp {
-                assert_type($1->type, $3->type);
+                assert_type(&$1->type, &$3->type);
                 $$ = new StmtListType();
                 conc_list_in_place(*$$, $3->stmt_list);
-                $$->push_back($1->var_name + " = " + exp->var_name + ";\n");
+                $$->push_back($1->var_name + " = " + $3->var_name + ";\n");
             }
             | deref_var OP_ASSIGN exp {
-                assert_type($1->type, $3->type);
+                assert_type(&$1->type, &$3->type);
                 $$ = new StmtListType();
                 conc_list_in_place(*$$, $3->stmt_list);
-                $$->push_back($1->var_name + " = " + exp->var_name + ";\n");
+                $$->push_back($1->var_name + " = " + $3->var_name + ";\n");
             }
             ;
 
 opt_else_stmt : /* empty */ { 
                   StmtListType stmt_list;
                   std::string label = new_label();
-                  stmt_list->push_back(label + ":\n");
+                  stmt_list.push_back(label + ":\n");
                   $$ = new Data("", label, stmt_list, Type(NoType));
               }
               | KW_ELSE opt_stmt_list {
                   StmtListType stmt_list;
                   std::string label = new_label();
-                  stmt_list->push_back(label + ":\n");
+                  stmt_list.push_back(label + ":\n");
                   conc_list_in_place(stmt_list, *$2);
                   $$ = new Data("", label, stmt_list, Type(NoType));
               }
               ;
 
-if_stmt : KW_IF exp {assert_condition($2);} KW_THEN opt_stmt_list opt_else_stmt KW_FI {
+if_stmt : KW_IF exp {assert_condition(&($2->type));} KW_THEN opt_stmt_list opt_else_stmt KW_FI {
             StmtListType stmt_list;
             stmt_list.push_back(std::string("if (!") + $2->var_name + ") goto " + $6->label + ";\n");
-            conc_list_in_place(stmt_list, $5->stmt_list);
+            conc_list_in_place(stmt_list, *$5);
             std::string end_if_stmt_label = new_label();
             stmt_list.push_back(std::string("goto ") + end_if_stmt_label + ";\n");
             conc_list_in_place(stmt_list, $6->stmt_list);
@@ -869,12 +861,12 @@ if_stmt : KW_IF exp {assert_condition($2);} KW_THEN opt_stmt_list opt_else_stmt 
         }
         ;
 
-while_stmt : KW_WHILE exp {assert_condition($2);} KW_DO opt_stmt_list KW_OD {}
+while_stmt : KW_WHILE exp {assert_condition(&($2->type));} KW_DO opt_stmt_list KW_OD {}
            ;
 
 return_stmt : KW_RETURN exp {
     StmtListType stmt_list;
-    conc_list_in_place(stmt_list, $2->stmt_list)
+    conc_list_in_place(stmt_list, $2->stmt_list);
     stmt_list.push_back("returned_value = " + $2->var_name + ";\n");
     stmt_list.push_back("goto return_label;");
     $$ = new Data("", "", stmt_list, $2->type);
@@ -883,19 +875,19 @@ return_stmt : KW_RETURN exp {
 
 opt_arguments_list : /* empty */ { $$ = new DataList(); }
                    | argument_list { 
-                       $$ = new TypeList();
+                       $$ = new DataList();
                        *$$ = *$1; 
                    }
                    ;
 
 argument_list : exp { 
-                  $$ = new TypeList();
-                  $$->push_back(*$1);
+                  $$ = new DataList();
+                  $$->push_back($1);
               }
               | argument_list KW_COMMA exp {
                   // TODO see error case 1
                   $$ = $1;
-                  $$->push_back(*$3);
+                  $$->push_back($3);
               }
 
 call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
@@ -923,7 +915,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
     // Check if arguments types match with expected types and initialize them
     StmtListType stmt_list;
     for (int idx = 0; idx < param_types.size(); ++idx) {
-        if (!types_match(param_types[idx].type, expected_param_types[idx].type)) {
+        if (!types_match(param_types[idx]->type, expected_param_types[idx]->type)) {
             std::string error_message = "Argument ";
             error_message += std::to_string(idx);
             error_message += " does not match expected type for procedure \'";
@@ -932,13 +924,13 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
             yyerror(error_message.c_str());
         }
 
-        stmt_list.push_back(expected_param_types[idx].var_name + " = " + param_types[idx].var_name + ";\n");
+        stmt_list.push_back(expected_param_types[idx]->var_name + " = " + param_types[idx]->var_name + ";\n");
     }
      
     stmt_list.push_back(std::string("goto ") + $1.name);
-    std::string current_pos = new_return_label();
-    stmt_list.push_back(new_return_label + ":\n");
-    return_label_stack.push_back(current_pos);
+    int return_key = new_return_label();
+    stmt_list.push_back(std::string("rl") + std::to_string(return_key) + ":\n");
+    return_label_stack.push_back(return_key);
     $$ = new Data("", "", stmt_list, Type(*(proc_type.return_type)));
 }
 ;
@@ -978,9 +970,8 @@ do_while_stmt : if_stmt {
                   conc_list_in_place(*$$, *$1);
               }
               | return_stmt {
-                  // TODO check return_stmt type
                   $$ = new StmtListType();
-                  conc_list_in_place(*$$, *$1);
+                  conc_list_in_place(*$$, $1->stmt_list);
               }
               | call_stmt {
                   $$ = new StmtListType();
@@ -991,7 +982,7 @@ do_while_stmt : if_stmt {
                   conc_list_in_place(*$$, *$1);
               }
               | KW_EXIT KW_WHEN exp { 
-                  assert_condition($3); 
+                  assert_condition(&$3->type); 
                   $$ = new StmtListType();
                   conc_list_in_place(*$$, $3->stmt_list);
                   $$->push_back(std::string("goto ") + current_end_do_while_label + ";\n");
