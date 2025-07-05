@@ -1,5 +1,5 @@
 #include "parser.tab.hpp"
-#include <ofstream>
+#include <fstream>
 
 extern int yyparse();
 

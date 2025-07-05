@@ -8,7 +8,7 @@
 
 #include <cstdlib>
 #include <vector>
-#include <ofstream>
+#include <fstream>
 #include <cstdio>
 
 extern int yylex();
