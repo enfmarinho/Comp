@@ -230,9 +230,6 @@ void assert_condition(TypePtr type) {
         char *name;
         int line, column;
     } id;
-    struct {
-        int line, column;
-    } general_values;
     TypePtr type;
     TypeListPtr type_list;
     Data* data;
@@ -251,57 +248,57 @@ void assert_condition(TypePtr type) {
 %token <literal_value> INT_LITERAL
 %token <literal_value> FLOAT_LITERAL
 %token <literal_value> STRING_LITERAL
-%token <general_values> KW_PROGRAM
-%token <general_values> KW_PROCEDURE
-%token <general_values> KW_BEGIN
-%token <general_values> KW_END
-%token <general_values> KW_IN
-%token <general_values> KW_STRUCT
-%token <general_values> KW_VAR
-%token <general_values> KW_INT
-%token <general_values> KW_FLOAT
-%token <general_values> KW_STRING
-%token <general_values> KW_BOOL
-%token <general_values> KW_REF
-%token <general_values> KW_DEREF
-%token <general_values> KW_RETURN
-%token <general_values> KW_WHILE
-%token <general_values> KW_DO
-%token <general_values> KW_OD
-%token <general_values> KW_IF
-%token <general_values> KW_THEN
-%token <general_values> KW_ELSE
-%token <general_values> KW_FI
-%token <general_values> KW_TRUE
-%token <general_values> KW_FALSE
-%token <general_values> KW_NEW
-%token <general_values> KW_NULL
-%token <general_values> KW_SEMICOLUMN
-%token <general_values> KW_COLUMN
-%token <general_values> KW_COMMA
-%token <general_values> KW_DOT
-%token <general_values> KW_EXIT
-%token <general_values> KW_WHEN
-%token <general_values> OP_ADD
-%token <general_values> OP_SUB
-%token <general_values> OP_MULT
-%token <general_values> OP_DIV
-%token <general_values> OP_EXP
-%token <general_values> UMINUS
-%token <general_values> OP_ASSIGN
-%token <general_values> OP_NOT
-%token <general_values> OP_AND
-%token <general_values> OP_OR
-%token <general_values> OP_SMALLER
-%token <general_values> OP_SMALLER_OR_EQ
-%token <general_values> OP_GREATER
-%token <general_values> OP_GREATER_OR_EQ
-%token <general_values> OP_EQUAL
-%token <general_values> OP_NOT_EQUAL
-%token <general_values> OPEN_PAREN
-%token <general_values> CLOSE_PAREN
-%token <general_values> OPEN_CURLY
-%token <general_values> CLOSE_CURLY
+%token KW_PROGRAM
+%token KW_PROCEDURE
+%token KW_BEGIN
+%token KW_END
+%token KW_IN
+%token KW_STRUCT
+%token KW_VAR
+%token KW_INT
+%token KW_FLOAT
+%token KW_STRING
+%token KW_BOOL
+%token KW_REF
+%token KW_DEREF
+%token KW_RETURN
+%token KW_WHILE
+%token KW_DO
+%token KW_OD
+%token KW_IF
+%token KW_THEN
+%token KW_ELSE
+%token KW_FI
+%token KW_TRUE
+%token KW_FALSE
+%token KW_NEW
+%token KW_NULL
+%token KW_SEMICOLUMN
+%token KW_COLUMN
+%token KW_COMMA
+%token KW_DOT
+%token KW_EXIT
+%token KW_WHEN
+%token OP_ADD
+%token OP_SUB
+%token OP_MULT
+%token OP_DIV
+%token OP_EXP
+%token UMINUS
+%token OP_ASSIGN
+%token OP_NOT
+%token OP_AND
+%token OP_OR
+%token OP_SMALLER
+%token OP_SMALLER_OR_EQ
+%token OP_GREATER
+%token OP_GREATER_OR_EQ
+%token OP_EQUAL
+%token OP_NOT_EQUAL
+%token OPEN_PAREN
+%token CLOSE_PAREN
+%token OPEN_CURLY
+%token CLOSE_CURLY
 
 %type <literal> literal
 %type <literal> bool_literal
