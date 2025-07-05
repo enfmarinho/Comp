@@ -878,7 +878,14 @@ if_stmt : KW_IF exp {assert_condition(&($2->type));} KW_THEN opt_stmt_list opt_e
         }
         ;
 
-while_stmt : KW_WHILE exp {assert_condition(&($2->type));} KW_DO opt_stmt_list KW_OD {}
+while_stmt : KW_WHILE exp {assert_condition(&($2->type));} KW_DO opt_stmt_list KW_OD {
+               $$ = new StmtListType();
+               std::string begin_while = new_label("begin_while");
+               $$->push_back(begin_while + ":\n");
+               conc_list_in_place(*$$, *$5);
+               conc_list_in_place(*$$, $2->stmt_list);
+               $$->push_back("if (" + $2->var_name + ") goto " + begin_while + ";\n");
+           }
            ;
 
 return_stmt : KW_RETURN exp {
