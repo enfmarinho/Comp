@@ -6,11 +6,12 @@
 #include <vector>
 
 class SymbolTable;
+class Data;
 
 struct Type {
   BaseType base_type;
   Type *referenced_type{nullptr};     // For Reference type, nullptr otherwise
-  std::vector<Type *> param_types;    // For procedure type, empty otherwise
+  std::vector<Data *> param_types;    // For procedure type, empty otherwise
   Type *return_type{nullptr};         // For procedure type, nullptr otherwise
   std::string struct_type_name;       // For struct variables
   SymbolTable *symbol_table{nullptr}; // For struct declarations
@@ -19,7 +20,7 @@ struct Type {
 
   Type(BaseType base_type, Type *referenced_type);
 
-  Type(BaseType base_type, std::vector<Type *> param_types, Type *return_type);
+  Type(BaseType base_type, std::vector<Data *> param_types, Type *return_type);
 
   Type(BaseType base_type, std::string struct_type_name);
 
