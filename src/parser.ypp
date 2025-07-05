@@ -42,7 +42,6 @@ SymbolTableStack symbol_table_stack;
 
 StmtListType decl_buf;
 std::string current_end_do_while_label;
-std::vector<int> return_label_stack;
 
 int lc = 0; // label counter
 int vc = 0; // var counter
@@ -161,14 +160,17 @@ std::string new_label(std::string label="") {
     return label;
 }
 
-int new_return_label() {
+int new_return_label(StmtListType stmt_list) {
+    stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(rlc + 1) + ";\n");
     return rlc++;
 }
 
 std::string return_func() {
     std::string func = "return_label:\n";
-    for (int i = 0; i < return_label_stack.size(); ++i) {
-        func += "if (return_label_stack.top() == ";
+    func += "if (return_keys_size == 0) return 1;\n";
+    func += "return_keys_size--;\n";
+    for (int i = 0; i < rlc; ++i) {
+        func += "if (return_keys[return_keys_size] == ";
         func += std::to_string(i);
         func += ") goto rl";
         func += std::to_string(i);
@@ -177,7 +179,14 @@ std::string return_func() {
     return func;
 }
 
+void push_return_key(StmtListType stmt_list, int key) {
+    stmt_list.push_back("return_keys[return_keys_size] = " + std::to_string(key) + ";\n");
+}
+
 void flush_file(StmtListType instruction_list) {
+    decl_buf.push_back("int return_keys[1024];");
+    decl_buf.push_back("int return_keys_size = 0;");
+
     for (std::string decl : decl_buf) {
         file_out << decl;
     }
@@ -432,6 +441,7 @@ proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_pa
               StmtListType stmt_list;
               stmt_list.push_back(label + ":\n");
               conc_list_in_place(stmt_list, *$10);
+              stmt_list.push_back("goto return_label;\n");
               $$ = new Data("", "", stmt_list, Type(*expected_proc_return_type));
               expected_proc_return_type = new Type(NoType);
           }
@@ -741,7 +751,7 @@ exp : exp OP_AND exp {
     }
     ;
 
-ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = new Data($3->var_name, "", {}, Type(Ref, &$3->type)); }
+ref_var : KW_REF OPEN_PAREN var CLOSE_PAREN { $$ = new Data(std::string("&")+ $3->var_name, "", {}, Type(Ref, &$3->type)); }
 
 deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN { 
               if ($3->type.base_type != Ref) 
@@ -927,10 +937,11 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
         stmt_list.push_back(expected_param_types[idx]->var_name + " = " + param_types[idx]->var_name + ";\n");
     }
      
-    stmt_list.push_back(std::string("goto ") + $1.name);
-    int return_key = new_return_label();
+    int return_key = new_return_label(stmt_list);
+    push_return_key(stmt_list, return_key);
+    stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(return_key) + ";\n");
+    stmt_list.push_back(std::string("goto ") + $1.name + ";\n");
     stmt_list.push_back(std::string("rl") + std::to_string(return_key) + ":\n");
-    return_label_stack.push_back(return_key);
     $$ = new Data("", "", stmt_list, Type(*(proc_type.return_type)));
 }
 ;
