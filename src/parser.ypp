@@ -415,8 +415,18 @@ proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_pa
             opt_proc_return_type {*expected_proc_return_type = *$7;} KW_BEGIN proc_body KW_END {
               symbol_table_stack.close_scope();
               symbol_table_stack.insert({$3.name, Type(Procedure, convert_to_type_list(*$5), $7)});
-              *expected_proc_return_type = Type(NoType);
-              $$ = new Data(); // TODO 
+
+              // Declare param variables 
+              for (Data data : *$5) {
+                  new_var(data.type, data.var_name);
+              }
+                
+              std::string label = new_label(std::string($3.name));
+              StmtListType stmt_list;
+              stmt_list.push_back(label + ":\n");
+              conc_list_in_place(stmt_list, *$10)
+              $$ = new Data("", "", stmt_list, Type(expected_proc_return_type));
+              expected_proc_return_type = Type(NoType);
           }
           ; 
 
