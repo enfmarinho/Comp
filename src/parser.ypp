@@ -598,7 +598,7 @@ exp : exp OP_AND exp {
         std::string var_name = new_var();
         StmtListType stmt_list = $2->stmt_list;
         stmt_list.push_back(var_name + " = !" + $2->var_name + ";\n");
-        $$ = new Data(var_name, "", $2->stmt_list, Type(*$1));
+        $$ = new Data(var_name, "", $2->stmt_list, Type(*$2));
     }
 
     | exp OP_SMALLER exp  {
@@ -961,7 +961,7 @@ opt_do_while_stmt_list : /* empty */ {
 
 do_while_stmt_list : do_while_stmt {
                        $$ = new StmtListType();
-                       conc_list_in_place(*$$, *$3);
+                       conc_list_in_place(*$$, *$1);
                    }
                    | do_while_stmt_list KW_SEMICOLUMN do_while_stmt {
                        // TODO see error case 1
