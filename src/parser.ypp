@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <stack>
 #include <fstream>
 #include <cstdio>
 
@@ -41,7 +42,7 @@ TypePtr expected_proc_return_type = new Type(NoType);
 SymbolTableStack symbol_table_stack;
 
 StmtListType decl_buf;
-std::string current_end_do_while_label;
+std::stack<std::string> do_while_end_stack;
 
 int lc = 0; // label counter
 int vc = 0; // var counter
@@ -965,13 +966,14 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
 ;
 
 // TODO current_end_do_while_label is a terrible strategy
-do_while : KW_DO {current_end_do_while_label = new_label("end_do_while");} opt_do_while_stmt_list KW_OD {
+do_while : KW_DO {do_while_end_stack.push(new_label("end_do_while"));} opt_do_while_stmt_list KW_OD {
              $$ = new StmtListType();
              std::string begin_while = new_label("begin_while");
              $$->push_back(begin_while + ":\n");
              conc_list_in_place(*$$, *$3);
              $$->push_back("goto " + begin_while + ";\n");
-             $$->push_back(current_end_do_while_label + ":\n");
+             $$->push_back(do_while_end_stack.top() + ":\n");
+             do_while_end_stack.pop();
          }
          ;
 
@@ -1012,12 +1014,16 @@ do_while_stmt : if_stmt {
               | while_stmt { 
                   $$ = new StmtListType();
                   conc_list_in_place(*$$, *$1);
+              } 
+              | do_while {
+                  $$ = new StmtListType();
+                  conc_list_in_place(*$$, *$1);
               }
               | KW_EXIT KW_WHEN exp { 
                   assert_condition(&$3->type); 
                   $$ = new StmtListType();
                   conc_list_in_place(*$$, $3->stmt_list);
-                  $$->push_back("if (" + $3->var_name + ")" + std::string("goto ") + current_end_do_while_label + ";\n");
+                  $$->push_back("if (" + $3->var_name + ")" + std::string("goto ") + do_while_end_stack.top() + ";\n");
               }
               ;
 
