@@ -1,0 +1,18 @@
+/*
+ * This is a usage example of while statement in the comp25 language 
+ */
+program main
+begin 
+    procedure main()
+    begin
+        var x: int := 0;
+        var y: int := 0
+    in
+        while x < 10 do 
+            while y < 10 do
+                y := y + 1
+            od;
+            x := x + 1
+        od
+    end
+end
