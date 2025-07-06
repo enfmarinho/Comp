@@ -1,4 +1,4 @@
-// TODO error case 1: having a constructor for decl_list deleting $$, may very well free memory twice
+// TODO error case 1: having a destructor for decl_list deleting $$, may very well free memory twice
 
 %{
 #include "parser.tab.hpp"
