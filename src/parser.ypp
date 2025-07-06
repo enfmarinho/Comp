@@ -156,10 +156,10 @@ std::string new_var(Type type, std::string var_name="") {
     return var_name;
 }
 
-std::string new_label(std::string label="") {
+std::string new_label(std::string label="", bool procedure=false) {
     if (label == "") 
         label = "l"; 
-    if (label != "main")
+    if (!procedure)
         label += std::to_string(lc++);
     return label;
 }
@@ -181,7 +181,7 @@ std::string return_func() {
         func += is;
         func += ";\nif (";
         func += var_name;
-        func += ") goto rl";
+        func += ") goto return_label";
         func += is;
         func += ";\n";
     }
@@ -446,7 +446,7 @@ proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_pa
                   new_var(data->type, data->var_name);
               }
                 
-              std::string label = new_label(std::string($3.name));
+              std::string label = new_label(std::string($3.name), true);
               StmtListType stmt_list;
               stmt_list.push_back(label + ":\n");
               conc_list_in_place(stmt_list, *$10);
@@ -468,19 +468,16 @@ rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramf
     SymbolTable struct_table = symbol_table_stack.top();
     symbol_table_stack.close_scope();
     symbol_table_stack.insert({$3.name, Type(Struct, $3.name, &struct_table)});
-    std::string struct_decl = "struct ";
-    struct_decl += $3.name;
-    struct_decl += "{\n";
 
+    StmtListType stmt_list;
+    stmt_list.push_back(std::string("struct ") + $3.name + "{\n");
     for (Data* data : *$5) {
-        struct_decl += type_name(&data->type);
-        struct_decl += " ";
-        struct_decl += data->var_name;
-        struct_decl += ";\n";
+        stmt_list.push_back(type_name(&data->type) + " " + data->var_name + ";\n");
     }
-    struct_decl += "};\n";
-
-    $$ = new Data("", "", {struct_decl}, Type(NoType));
+    stmt_list.push_back("};\n");
+    
+    conc_list_in_place(decl_buf, stmt_list);
+    $$ = new Data("", "", {}, Type(NoType));
 }
 ;
 
@@ -960,7 +957,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
     push_return_key(stmt_list, return_key);
     stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(return_key) + ";\n");
     stmt_list.push_back(std::string("goto ") + $1.name + ";\n");
-    stmt_list.push_back(std::string("rl") + std::to_string(return_key) + ":\n");
+    stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
     $$ = new Data("", "", stmt_list, Type(*(proc_type.return_type)));
 }
 ;
