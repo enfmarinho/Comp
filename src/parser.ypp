@@ -15,7 +15,7 @@
 extern int yylex();
 extern int past_token_line;
 extern int past_token_column;
-extern std::ofstream file_out;
+extern std::string path_file_out;
 
 struct Data {
     std::string var_name;
@@ -197,6 +197,7 @@ void flush_file(StmtListType instruction_list) {
     decl_buf.push_back("int return_keys[1024];\n");
     decl_buf.push_back("int return_keys_size = 0;\n");
 
+    std::ofstream file_out(path_file_out);
     for (std::string decl : decl_buf) {
         file_out << decl;
     }

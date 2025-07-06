@@ -1,17 +1,16 @@
 #include "parser.tab.hpp"
-#include <fstream>
+#include <string>
 
 extern int yyparse();
 
-std::ofstream file_out;
+std::string path_file_out;
 
 int main(int argc, char *argv[]) {
   if (argc > 1)
-    file_out = std::ofstream(argv[1]);
+    path_file_out = argv[1];
   else
-    file_out = std::ofstream("three_address_code.c");
+    path_file_out = "three_address_code.c";
 
   yyparse();
-  file_out.close();
   return 0;
 }
