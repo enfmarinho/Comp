@@ -1,0 +1,21 @@
+/*
+ * This is an example usage of a do_while loop in the comp25 language
+ */
+program main
+begin 
+    procedure main()
+    begin
+        var x: int := 0;
+        var y: int := 0
+    in
+        do 
+            x := x + 1;
+            do 
+                y := y + 1;
+                exit when y > 10
+            od;
+            exit when x > 20
+        od 
+    end
+end
+
