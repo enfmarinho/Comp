@@ -157,8 +157,9 @@ std::string new_var(Type type, std::string var_name="") {
 
 std::string new_label(std::string label="") {
     if (label == "") 
-        label = "l" + std::to_string(lc++);
-
+        label = "l"; 
+    if (label != "main")
+        label += std::to_string(lc++);
     return label;
 }
 
@@ -882,9 +883,12 @@ while_stmt : KW_WHILE exp {assert_condition(&($2->type));} KW_DO opt_stmt_list K
                $$ = new StmtListType();
                std::string begin_while = new_label("begin_while");
                $$->push_back(begin_while + ":\n");
-               conc_list_in_place(*$$, *$5);
                conc_list_in_place(*$$, $2->stmt_list);
-               $$->push_back("if (" + $2->var_name + ") goto " + begin_while + ";\n");
+               std::string end_while = new_label("end_while");
+               $$->push_back("if (!" + $2->var_name + ") goto " + end_while + ";\n");
+               conc_list_in_place(*$$, *$5);
+               $$->push_back("goto " + begin_while + ";\n");
+               $$->push_back(end_while + ":\n");
            }
            ;
 
