@@ -169,7 +169,7 @@ int new_return_label(StmtListType stmt_list) {
 
 std::string return_func() {
     std::string func = "return_label:\n";
-    func += "if (return_keys_size == 0) return 1;\n";
+    func += "if (return_keys_size == 0) return 0;\n";
     func += "return_keys_size--;\n";
     std::string var_name = new_var(Type(Int));
     for (int i = 0; i < rlc; ++i) {
@@ -198,7 +198,7 @@ void flush_file(StmtListType instruction_list) {
         file_out << decl;
     }
 
-    file_out << "int main() {\n  goto main;";
+    file_out << "int main() {\n  goto main;\n";
     for (std::string instruction : instruction_list) {
         file_out << instruction;
     }
@@ -960,10 +960,13 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
 }
 ;
 
-// TODO this is wrong, there should be a stmt_list->push_back("goto" + while_start) in case exp is true
+// TODO current_end_do_while_label is a terrible strategy
 do_while : KW_DO {current_end_do_while_label = new_label("end_do_while");} opt_do_while_stmt_list KW_OD {
              $$ = new StmtListType();
+             std::string begin_while = new_label("begin_while");
+             $$->push_back(begin_while + ":\n");
              conc_list_in_place(*$$, *$3);
+             $$->push_back("goto " + begin_while + ";\n");
              $$->push_back(current_end_do_while_label + ":\n");
          }
          ;
@@ -1010,7 +1013,7 @@ do_while_stmt : if_stmt {
                   assert_condition(&$3->type); 
                   $$ = new StmtListType();
                   conc_list_in_place(*$$, $3->stmt_list);
-                  $$->push_back(std::string("goto ") + current_end_do_while_label + ";\n");
+                  $$->push_back("if (" + $3->var_name + ")" + std::string("goto ") + current_end_do_while_label + ";\n");
               }
               ;
 
