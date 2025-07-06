@@ -895,7 +895,7 @@ return_stmt : KW_RETURN exp {
     conc_list_in_place(stmt_list, $2->stmt_list);
     stmt_list.push_back("returned_value = " + $2->var_name + ";\n");
     stmt_list.push_back("goto return_label;");
-    $$ = new Data("", "", stmt_list, $2->type);
+    $$ = new Data(returned_value, "", stmt_list, $2->type);
 }
 ;
 
@@ -958,7 +958,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
     stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(return_key) + ";\n");
     stmt_list.push_back(std::string("goto ") + $1.name + ";\n");
     stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
-    $$ = new Data("", "", stmt_list, Type(*(proc_type.return_type)));
+    $$ = new Data(returned_value, "", stmt_list, Type(*(proc_type.return_type)));
 }
 ;
 
