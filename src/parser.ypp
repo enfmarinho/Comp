@@ -170,6 +170,10 @@ int new_return_label(StmtListType stmt_list) {
     return rlc++;
 }
 
+std::string write_include() {
+    return "#include <stdio.c>\n";
+}
+
 std::string return_func() {
     std::string func = "return_label:\n";
     func += "if (return_keys_size == 0) return 0;\n";
@@ -189,6 +193,35 @@ std::string return_func() {
     return func;
 }
 
+std::string print_int_func() {
+    std::string func = "print_int_func:\nprintf(\"%i\", print_int_func_param);\ngoto return_label;";
+    return func;
+}
+
+std::string print_float_func() {
+    std::string func = "print_float_func:\nprintf(\"%f\", print_float_func_param);\ngoto return_label;";
+    return func;
+}
+
+std::string print_string_func() {
+    std::string func = "print_string_func:\nprintf(\"%s\", print_string_func_param);\ngoto return_label;";
+    return func;
+}
+
+std::string print_bool_func() {
+    std::string func = "print_bool_func:\nprintf(\"%i\", print_bool_func_param);\ngoto return_label;";
+    return func;
+}
+
+std::string exp_func() {
+    std::string exp_label = new_label("exp_label");
+    std::string exp_func_a = new_var(Type(Int), "exp_func_a");
+    std::string exp_func_b = new_var(Type(Int), "exp_func_b");
+    std::string exp_func_out = new_var(Type(Int), "exp_func_out");
+    std::string func = exp_label + ":\n" + exp_func_out + "=pow(" + exp_func_a + ", " + exp_func_b  + ");\ngoto return_label;";
+    return func;
+}
+
 void push_return_key(StmtListType stmt_list, int key) {
     stmt_list.push_back("return_keys[return_keys_size] = " + std::to_string(key) + ";\n");
 }
@@ -198,6 +231,7 @@ void flush_file(StmtListType instruction_list) {
     decl_buf.push_back("int return_keys_size = 0;\n");
 
     std::ofstream file_out(path_file_out);
+    file_out << write_include();
     for (std::string decl : decl_buf) {
         file_out << decl;
     }
@@ -367,13 +401,18 @@ void flush_file(StmtListType instruction_list) {
 
 %%
 
-program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {
+program : KW_PROGRAM ID KW_BEGIN {populate_symbol_table();} opt_decl_list KW_END {
             Type type;
             if (!symbol_table_stack.consult("main", type)) {
                 yyerror("Missing entry point: a procedure named main has to be declared");
-            }
-            $4->push_back(return_func());
-            flush_file(*$4);
+            } 
+            $5->push_back(return_func());
+            $5->push_back(print_int_func());
+            $5->push_back(print_float_func());
+            $5->push_back(print_bool_func());
+            $5->push_back(print_string_func());
+            $5->push_back(exp_func());
+            flush_file(*$5);
         }
         ;
 
@@ -494,7 +533,7 @@ paramfield_decl : ID KW_COLUMN type {
 opt_paramfield_decl_list_comma : /* empty */ { $$ = new DataList(); }
                                | paramfield_decl_list_comma { 
                                    $$ = new DataList();
-                                   *$$ = *$1; // TODO probably needs to be explicity defined
+                                   *$$ = *$1;
                                }
                                ;
 
@@ -720,8 +759,13 @@ exp : exp OP_AND exp {
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
-        // TODO fix this later, OP_EXP is just a OP_MULT at the moment
-        stmt_list.push_back(var_name + " = " + $1->var_name + "*" + $3->var_name + ";\n");
+        stmt_list.push_back("exp_func_a = " + $1->var_name + ";\n");
+        stmt_list.push_back("exp_func_b = " + $3->var_name + ";\n");
+        std::string return_key = new_return_label();
+        stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(return_key) + ";\n");
+        stmt_list.push_back("goto exp_func;\n");
+        stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
+        stmt_list.push_back(var_name + " = exp_func_out;\n");
         $$ = new Data(var_name, "", stmt_list, Type($1->type));
     }
     | OP_SUB exp %prec UMINUS {
@@ -966,7 +1010,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
     push_return_key(stmt_list, return_key);
     stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(return_key) + ";\n");
     stmt_list.push_back(std::string("goto ") + $1.name + ";\n");
-    // stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
+    stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
     $$ = new Data(proc_type.return_var_name, "", stmt_list, Type(*(proc_type.return_type)));
 }
 ;
