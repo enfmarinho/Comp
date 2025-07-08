@@ -171,7 +171,7 @@ int new_return_label(StmtListType stmt_list) {
 }
 
 std::string write_include() {
-    return "#include <stdio.c>\n";
+    return "#include <stdio.h>\n#include <math.h>\n";
 }
 
 std::string return_func() {
@@ -194,22 +194,26 @@ std::string return_func() {
 }
 
 std::string print_int_func() {
-    std::string func = "print_int_func:\nprintf(\"%i\", print_int_func_param);\ngoto return_label;";
+    std::string print_label = new_label("print_int_func");
+    std::string func = print_label + ":\nprintf(\"%i\"," + print_label + ");\ngoto return_label;";
     return func;
 }
 
 std::string print_float_func() {
-    std::string func = "print_float_func:\nprintf(\"%f\", print_float_func_param);\ngoto return_label;";
+    std::string print_label = new_label("print_float_func");
+    std::string func = print_label + ":\nprintf(\"%f\"," + print_label + ");\ngoto return_label;";
     return func;
 }
 
 std::string print_string_func() {
-    std::string func = "print_string_func:\nprintf(\"%s\", print_string_func_param);\ngoto return_label;";
+    std::string print_label = new_label("print_string_func");
+    std::string func = print_label + ":\nprintf(\"%s\"," + print_label + ");\ngoto return_label;";
     return func;
 }
 
 std::string print_bool_func() {
-    std::string func = "print_bool_func:\nprintf(\"%i\", print_bool_func_param);\ngoto return_label;";
+    std::string print_label = new_label("print_bool_func");
+    std::string func = print_label + ":\nprintf(\"%i\"," + print_label + ");\ngoto return_label;";
     return func;
 }
 
