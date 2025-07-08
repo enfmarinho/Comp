@@ -1,0 +1,20 @@
+/*
+ * This is a usage example of the comp25 language library methods 
+ */
+program main
+begin 
+    procedure main()
+    begin
+        // Print to stdout the result of 2 to the power of 3
+        print_int(expi(2, 3));
+
+        // Print to stdout the result of 2.2 to the power of 3.0
+        print_float(expf(2.2, 3.0));
+
+        // Print to stdout the boolean true
+        print_bool(true);
+
+        // Print to stdout "Hello, World!\n"
+        print_string("Hello, World!\n");
+    end
+end
