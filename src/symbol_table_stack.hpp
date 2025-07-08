@@ -14,13 +14,13 @@ public:
 
   void close_scope() { m_symbol_table_stack.pop_back(); }
 
-  void insert(std::pair<std::string, Type> value) {
+  void insert(std::pair<std::string, Symbol> value) {
     m_symbol_table_stack.back().insert(value);
   }
 
   SymbolTable top() { return m_symbol_table_stack.back(); }
 
-  bool consult(std::string id, Type &symbol) {
+  bool consult(std::string id, Symbol &symbol) {
     for (auto it = m_symbol_table_stack.rbegin();
          it != m_symbol_table_stack.rend(); ++it) {
       if (it->consult(id, symbol))
