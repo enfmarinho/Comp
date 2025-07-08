@@ -161,10 +161,9 @@ void assert_condition(TypePtr type) {
 
 std::string new_var(Type type, std::string var_name="") {
     if (var_name == "") {
-        var_name = "t" + std::to_string(vc++);
-    } else {
-        // TODO must append std::to_string(vc++) to the end of var_name, but this has implications
+        var_name = "t";
     }
+    var_name += std::to_string(vc++);
     decl_buf.push_back(internal_type_name(&type) + " " + var_name + ";\n");
     return var_name;
 }
@@ -208,7 +207,7 @@ std::string return_func() {
 std::string print_int_func() {
     std::string print_label = new_label("print_int", true);
     std::string arg_name = new_var(Type(Int), "print_int_arg");
-    symbol_table_stack.insert({"print_inc", Type(Procedure, {new Data(arg_name, "", {}, Type(Int))}, new Type(Void), std::string(""))});
+    symbol_table_stack.insert({"print_inc", Symbol(print_label, Type(Procedure, {new Data(arg_name, "", {}, Type(Int))}, new Type(Void), std::string("")))});
     std::string func = print_label + ":\nprintf(\"%i\"," + arg_name + ");\ngoto return_label;";
     return func;
 }
@@ -216,7 +215,7 @@ std::string print_int_func() {
 std::string print_float_func() {
     std::string print_label = new_label("print_float");
     std::string arg_name = new_var(Type(Float), "print_float_arg");
-    symbol_table_stack.insert({"print_float", Type(Procedure, {new Data(arg_name, "", {}, Type(Float))}, new Type(Void), std::string(""))});
+    symbol_table_stack.insert({"print_float", Symbol(print_label, Type(Procedure, {new Data(arg_name, "", {}, Type(Float))}, new Type(Void), std::string("")))});
     std::string func = print_label + ":\nprintf(\"%f\"," + arg_name + ");\ngoto return_label;";
     return func;
 }
@@ -224,7 +223,7 @@ std::string print_float_func() {
 std::string print_string_func() {
     std::string print_label = new_label("print_string");
     std::string arg_name = new_var(Type(String), "print_string_arg");
-    symbol_table_stack.insert({"print_string", Type(Procedure, {new Data(arg_name, "", {}, Type(String))}, new Type(Void), std::string(""))});
+    symbol_table_stack.insert({"print_string", Symbol(print_label, Type(Procedure, {new Data(arg_name, "", {}, Type(String))}, new Type(Void), std::string("")))});
     std::string func = print_label + ":\nprintf(\"%s\"," + arg_name + ");\ngoto return_label;";
     return func;
 }
@@ -232,41 +231,49 @@ std::string print_string_func() {
 std::string print_bool_func() {
     std::string print_label = new_label("print_bool");
     std::string arg_name = new_var(Type(Bool), "print_bool_arg");
-    symbol_table_stack.insert({"print_bool", Type(Procedure, {new Data(arg_name, "", {}, Type(Bool))}, new Type(Void), std::string(""))});
+    symbol_table_stack.insert({"print_bool", Symbol(print_label, Type(Procedure, {new Data(arg_name, "", {}, Type(Bool))}, new Type(Void), std::string("")))});
     std::string func = print_label + ":\nprintf(\"%i\"," + arg_name + ");\ngoto return_label;";
     return func;
 }
 
-std::string exp_func() {
-    std::string exp_func_out = new_var(Type(Int), "exp_func_out");
-    std::string exp_arg_a = new_var(Type(Int), "exp_arg_a");
-    std::string exp_arg_b = new_var(Type(Int), "exp_arg_b");
-    symbol_table_stack.insert({"exp", Type(Procedure, {new Data(exp_arg_a, "", {}, Type(Int)), new Data(exp_arg_b, "", {}, Type(Int))}, 
-                                new Type(Int), exp_func_out)});
-    std::string exp_label = new_label("exp_label");
-    std::string func = exp_label + ":\n" + exp_func_out + "=pow(" + exp_arg_a + ", " + exp_arg_b  + ");\ngoto return_label;";
+std::string expi_func() {
+    std::string exp_label = new_label("expi_label");
+    std::string exp_func_out = new_var(Type(Int), "expi_func_out");
+    std::string exp_arg_a = new_var(Type(Int), "expi_arg_a");
+    std::string exp_arg_b = new_var(Type(Int), "expi_arg_b");
+    symbol_table_stack.insert({"expi", Symbol(exp_label, Type(Procedure, {new Data(exp_arg_a, "", {}, Type(Int)), new Data(exp_arg_b, "", {}, Type(Int))}, 
+                                new Type(Int), exp_func_out))});
+    std::string func = exp_label + ":\n" + exp_func_out + " = pow(" + exp_arg_a + ", " + exp_arg_b  + ");\ngoto return_label;";
     return func;
 }
 
+std::string expf_func() {
+    std::string exp_label = new_label("expf_label");
+    std::string exp_func_out = new_var(Type(Int), "expf_func_out");
+    std::string exp_arg_a = new_var(Type(Int), "expf_arg_a");
+    std::string exp_arg_b = new_var(Type(Int), "expf_arg_b");
+    symbol_table_stack.insert({"expf", Symbol(exp_label, Type(Procedure, {new Data(exp_arg_a, "", {}, Type(Int)), new Data(exp_arg_b, "", {}, Type(Int))}, 
+                                new Type(Int), exp_func_out))});
+    std::string func = exp_label + ":\n" + exp_func_out + " = pow(" + exp_arg_a + ", " + exp_arg_b  + ");\ngoto return_label;";
+    return func;
+}
+
+std::string lib_functions() {
+    std::string functions;
+    functions += return_func();
+    functions += print_int_func();
+    functions += print_float_func();
+    functions += print_bool_func();
+    functions += print_string_func();
+    functions += expi_func();
+    functions += expf_func();
+    return functions;
+}
 void push_return_key(StmtListType stmt_list, int key) {
-    stmt_list.push_back("return_keys[return_keys_size] = " + std::to_string(key) + ";\n");
+    stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(key) + ";\n");
 }
 
 void flush_file(StmtListType instruction_list) {
-    decl_buf.push_back("int return_keys[1024];\n");
-    decl_buf.push_back("int return_keys_size = 0;\n");
-
-    std::ofstream file_out(path_file_out);
-    file_out << write_include();
-    for (std::string decl : decl_buf) {
-        file_out << decl;
-    }
-
-    file_out << "int main() {\n  goto main;\n";
-    for (std::string instruction : instruction_list) {
-        file_out << instruction;
-    }
-    file_out << "}";
 }
 
 %}
@@ -428,17 +435,28 @@ void flush_file(StmtListType instruction_list) {
 %%
 
 program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {
-            Type type;
-            if (!symbol_table_stack.consult("main", type)) {
+            Symbol symbol;
+            if (!symbol_table_stack.consult("main", symbol)) {
                 yyerror("Missing entry point: a procedure named main has to be declared");
             } 
-            $4->push_back(return_func());
-            $4->push_back(print_int_func());
-            $4->push_back(print_float_func());
-            $4->push_back(print_bool_func());
-            $4->push_back(print_string_func());
-            $4->push_back(exp_func());
-            flush_file(*$4);
+            $4->push_back(lib_functions());
+
+            decl_buf.push_back("int return_keys[1024];\n");
+            decl_buf.push_back("int return_keys_size = 0;\n");
+
+            // Flush decl_buf
+            std::ofstream file_out(path_file_out);
+            file_out << write_include();
+            for (std::string decl : decl_buf) {
+                file_out << decl;
+            }
+
+            // Flush stmt_list
+            file_out << "int main() {\n  goto " + symbol.internal_name + ";\n";
+            for (std::string instruction : *$4) {
+                file_out << instruction;
+            }
+            file_out << "}";
         }
         ;
 
@@ -472,25 +490,25 @@ decl : var_decl {
      ;
 
 var_decl : KW_VAR ID KW_COLUMN type {
-    symbol_table_stack.insert({$2.name, *$4});
-    new_var(*$4, $2.name);
+    std::string var_name = new_var(*$4, $2.name);
+    symbol_table_stack.insert({$2.name, Symbol(var_name, *$4)});
     $$ = new Data("", "", {}, Type(NoType));
 }
 | KW_VAR ID KW_COLUMN type OP_ASSIGN exp {
     assert_type($4, &$6->type);
-    symbol_table_stack.insert({$2.name, *$4});
-    new_var(*$4, $2.name);
+    std::string var_name = new_var(*$4, $2.name);
+    symbol_table_stack.insert({$2.name, Symbol(var_name, *$4)});
     StmtListType stmt_list;
     conc_list_in_place(stmt_list, $6->stmt_list);
-    stmt_list.push_back(std::string($2.name) + " = " + $6->var_name + ";\n");
+    stmt_list.push_back(var_name + " = " + $6->var_name + ";\n");
     $$ = new Data("", "", stmt_list, Type(NoType));
 }
 | KW_VAR ID OP_ASSIGN exp {
-    symbol_table_stack.insert({$2.name, $4->type});
-    new_var($4->type, $2.name);
+    std::string var_name = new_var($4->type, $2.name);
+    symbol_table_stack.insert({$2.name, Symbol(var_name, $4->type)});
     StmtListType stmt_list;
     conc_list_in_place(stmt_list, $4->stmt_list);
-    stmt_list.push_back(std::string($2.name) + " = " + $4->var_name + ";\n");
+    stmt_list.push_back(var_name + " = " + $4->var_name + ";\n");
     $$ = new Data("", "", stmt_list, Type(NoType));
 }
 ;
@@ -507,15 +525,16 @@ proc_decl : KW_PROCEDURE {symbol_table_stack.open_scope();} ID OPEN_PAREN opt_pa
             opt_proc_return_type {*expected_proc_return_type = *$7; 
             if(!types_match(*expected_proc_return_type, Type(Void)))return_var_name = new_var(*$7);} 
             KW_BEGIN proc_body KW_END {
+              std::string label = new_label(std::string($3.name));
               symbol_table_stack.close_scope();
-              symbol_table_stack.insert({$3.name, Type(Procedure, *$5, $7, return_var_name)});
+              symbol_table_stack.insert({$3.name, Symbol(label, Type(Procedure, *$5, $7, return_var_name))});
 
+              // TODO is this still needed
               // Declare param variables 
               for (Data* data : *$5) {
                   new_var(data->type, data->var_name);
               }
                 
-              std::string label = new_label(std::string($3.name), true);
               StmtListType stmt_list;
               stmt_list.push_back(label + ":\n");
               conc_list_in_place(stmt_list, *$10);
@@ -536,10 +555,12 @@ proc_body : opt_stmt_list { $$ = new StmtListType(*$1); }
 rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramfield_decl_list_semicolumn CLOSE_CURLY {
     SymbolTable struct_table = symbol_table_stack.top();
     symbol_table_stack.close_scope();
-    symbol_table_stack.insert({$3.name, Type(Struct, $3.name, &struct_table)});
+    std::string struct_internal_name = $3.name;
+    struct_internal_name += std::to_string(vc++);
+    symbol_table_stack.insert({$3.name, Symbol(struct_internal_name, Type(Struct, $3.name, &struct_table))});
 
     StmtListType stmt_list;
-    stmt_list.push_back(std::string("struct ") + $3.name + "{\n");
+    stmt_list.push_back(std::string("struct ") + struct_internal_name + "{\n");
     for (Data* data : *$5) {
         stmt_list.push_back(internal_type_name(&data->type) + " " + data->var_name + ";\n");
     }
@@ -551,8 +572,9 @@ rec_decl : KW_STRUCT {symbol_table_stack.open_scope();} ID OPEN_CURLY opt_paramf
 ;
 
 paramfield_decl : ID KW_COLUMN type {
-                    symbol_table_stack.insert({$1.name, *$3});
-                    $$ = new Data($1.name, "", {}, *$3);
+                    std::string var_name = new_var(*$3, $1.name);
+                    symbol_table_stack.insert({$1.name, Symbol(var_name, *$3)});
+                    $$ = new Data(var_name, "", {}, *$3);
                 }
                 ;
 
@@ -785,12 +807,20 @@ exp : exp OP_AND exp {
         StmtListType stmt_list;
         conc_list_in_place(stmt_list, $1->stmt_list);
         conc_list_in_place(stmt_list, $3->stmt_list);
-        stmt_list.push_back("exp_func_a = " + $1->var_name + ";\n");
-        stmt_list.push_back("exp_func_b = " + $3->var_name + ";\n");
+
+        std::string func_name = "expi";
+        if ($1->type.base_type == Float) 
+            func_name = "expf";
+
+        Symbol symbol_exp; 
+        symbol_table_stack.consult(func_name, symbol_exp);
+        stmt_list.push_back(symbol_exp.type.param_types[0]->var_name + " = " + $1->var_name + ";\n");
+        stmt_list.push_back(symbol_exp.type.param_types[1]->var_name + " = " + $3->var_name + ";\n");
         int return_key = new_return_label(stmt_list);
-        stmt_list.push_back("goto exp_func;\n");
+        push_return_key(stmt_list, return_key);
+        stmt_list.push_back("goto " + symbol_exp.internal_name + ";\n");
         stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
-        stmt_list.push_back(var_name + " = exp_func_out;\n");
+        stmt_list.push_back(var_name + " = " + symbol_exp.type.return_var_name + ";\n");
         $$ = new Data(var_name, "", stmt_list, Type($1->type));
     }
     | OP_SUB exp %prec UMINUS {
@@ -808,12 +838,12 @@ exp : exp OP_AND exp {
         $$ = new Data(*$1);
     }
     | KW_NEW ID { 
-        Type id_type;
-        symbol_table_stack.consult($2.name, id_type);
-        if (id_type.base_type != Struct) 
-            yyerror("Use new keyword only to instantiate structs");
+        Symbol struct_symbol;
+        symbol_table_stack.consult($2.name, struct_symbol);
+        if (struct_symbol.type.base_type != Struct) 
+            yyerror("Use the new keyword only to instantiate structs");
 
-        Type type(Struct, $2.name);
+        Type type(Struct, struct_symbol.internal_name);
         std::string var_name = new_var(type, $2.name);
         $$ = new Data(var_name, "", {}, type); 
     }
@@ -852,23 +882,22 @@ deref_var : KW_DEREF OPEN_PAREN var CLOSE_PAREN {
           ;
 
 var : ID { 
-    Type id_type;
-    if (!symbol_table_stack.consult($1.name, id_type)) {
+    Symbol var_symbol;
+    if (!symbol_table_stack.consult($1.name, var_symbol)) {
         std::string error_message = "var \'";
         error_message += $1.name;
         error_message += "\' not declared";
         yyerror(error_message.c_str());
     }
-    
-    $$ = new Data($1.name, "", {}, Type(id_type)); 
+    $$ = new Data(var_symbol.internal_name, "", {}, Type(var_symbol.type)); 
 }
-| exp KW_DOT ID {
+| exp KW_DOT ID { // TODO check this
     std::string struct_name = $1->type.struct_type_name;
     if ($1->type.base_type != Struct) 
         yyerror("Use the dot reference operation only for structs");
 
-    Type struct_type, member_type;
-    if (!symbol_table_stack.consult(struct_name, struct_type)) {
+    Symbol struct_symbol, member_symbol;
+    if (!symbol_table_stack.consult(struct_name, struct_symbol)) {
         // Should never fall here
         std::string error_message = "struct \'";
         error_message += struct_name;
@@ -876,7 +905,7 @@ var : ID {
         yyerror(error_message.c_str());
     }
 
-    if (!struct_type.symbol_table->consult($3.name, member_type)) {
+    if (!struct_symbol.type.symbol_table->consult($3.name, member_symbol)) {
         std::string error_message = "No member \'";
         error_message += $3.name;
         error_message += "\' in ";
@@ -884,7 +913,7 @@ var : ID {
         yyerror(error_message.c_str());
     }
     
-    $$ = new Data($1->var_name + "." + $3.name, "", {}, Type(member_type)); 
+    $$ = new Data($1->var_name + "." + member_symbol.internal_name, "", {}, Type(member_symbol.type)); 
 }
 ;
 
@@ -995,8 +1024,8 @@ argument_list : exp {
               }
 
 call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
-    Type proc_type;
-    if (!symbol_table_stack.consult($1.name, proc_type)) {
+    Symbol proc_symbol;
+    if (!symbol_table_stack.consult($1.name, proc_symbol)) {
         std::string error_message = "procedure \'";
         error_message += $1.name;
         error_message += "\' not declared";
@@ -1005,7 +1034,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
 
     // Check if number of arguments passed match with expected number of arguments
     DataList param_types = *$3;
-    DataList expected_param_types = proc_type.param_types;
+    DataList expected_param_types = proc_symbol.type.param_types;
     if (param_types.size() != expected_param_types.size()) {
         std::string error_message = "Procedure \'";
         error_message += $1.name;
@@ -1033,14 +1062,12 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
      
     int return_key = new_return_label(stmt_list);
     push_return_key(stmt_list, return_key);
-    stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(return_key) + ";\n");
-    stmt_list.push_back(std::string("goto ") + $1.name + ";\n");
+    stmt_list.push_back(std::string("goto ") + proc_symbol.internal_name + ";\n");
     stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
-    $$ = new Data(proc_type.return_var_name, "", stmt_list, Type(*(proc_type.return_type)));
+    $$ = new Data(proc_symbol.type.return_var_name, "", stmt_list, Type(*(proc_symbol.type.return_type)));
 }
 ;
 
-// TODO current_end_do_while_label is a terrible strategy
 do_while : KW_DO {do_while_end_stack.push(new_label("end_do_while"));} opt_do_while_stmt_list KW_OD {
              $$ = new StmtListType();
              std::string begin_while = new_label("begin_while");
@@ -1106,7 +1133,14 @@ type : KW_FLOAT { $$ = new Type(Float); }
      | KW_INT { $$ = new Type(Int); }
      | KW_STRING { $$ = new Type(String); }
      | KW_BOOL { $$ = new Type(Bool); }
-     | ID { $$ = new Type(Struct, $1.name); }
+     | ID { 
+         Symbol struct_symbol;
+         if (!symbol_table_stack.consult($1.name, struct_symbol)) {
+            std::string error_message = std::string("Struct ") + $1.name + " not declared.";
+            yyerror(error_message.c_str());
+         }
+         $$ = new Type(Struct, $1.name); 
+     }
      | KW_REF OPEN_PAREN type CLOSE_PAREN { $$ = new Type(Ref, $3); }
      ;
 
