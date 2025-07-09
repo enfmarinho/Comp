@@ -160,9 +160,9 @@ void assert_condition(TypePtr type) {
 }
 
 std::string new_var(Type type, std::string var_name="") {
-    if (var_name == "") {
+    if (var_name == "") 
         var_name = "t";
-    }
+    
     var_name += std::to_string(vc++);
     decl_buf.push_back(internal_type_name(&type) + " " + var_name + ";\n");
     return var_name;
@@ -176,8 +176,7 @@ std::string new_label(std::string label="", bool procedure=false) {
     return label;
 }
 
-int new_return_label(StmtListType stmt_list) {
-    stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(rlc + 1) + ";\n");
+int new_return_key() {
     return rlc++;
 }
 
@@ -205,57 +204,102 @@ std::string return_func() {
 }
 
 std::string print_int_func() {
-    std::string print_label = new_label("print_int", true);
-    std::string arg_name = new_var(Type(Int), "print_int_arg");
-    symbol_table_stack.insert({"print_inc", Symbol(print_label, Type(Procedure, {new Data(arg_name, "", {}, Type(Int))}, new Type(Void), std::string("")))});
+    Symbol symbol;
+    symbol_table_stack.consult("print_int", symbol);
+    std::string print_label = symbol.internal_name;
+    std::string arg_name = symbol.type.param_types[0]->var_name;
     std::string func = print_label + ":\nprintf(\"%i\"," + arg_name + ");\ngoto return_label;";
     return func;
 }
 
 std::string print_float_func() {
-    std::string print_label = new_label("print_float");
-    std::string arg_name = new_var(Type(Float), "print_float_arg");
-    symbol_table_stack.insert({"print_float", Symbol(print_label, Type(Procedure, {new Data(arg_name, "", {}, Type(Float))}, new Type(Void), std::string("")))});
+    Symbol symbol;
+    symbol_table_stack.consult("print_float", symbol);
+    std::string print_label = symbol.internal_name;
+    std::string arg_name = symbol.type.param_types[0]->var_name;
     std::string func = print_label + ":\nprintf(\"%f\"," + arg_name + ");\ngoto return_label;";
     return func;
 }
 
 std::string print_string_func() {
-    std::string print_label = new_label("print_string");
-    std::string arg_name = new_var(Type(String), "print_string_arg");
-    symbol_table_stack.insert({"print_string", Symbol(print_label, Type(Procedure, {new Data(arg_name, "", {}, Type(String))}, new Type(Void), std::string("")))});
+    Symbol symbol;
+    symbol_table_stack.consult("print_string", symbol);
+    std::string print_label = symbol.internal_name;
+    std::string arg_name = symbol.type.param_types[0]->var_name;
     std::string func = print_label + ":\nprintf(\"%s\"," + arg_name + ");\ngoto return_label;";
     return func;
 }
 
 std::string print_bool_func() {
-    std::string print_label = new_label("print_bool");
-    std::string arg_name = new_var(Type(Bool), "print_bool_arg");
-    symbol_table_stack.insert({"print_bool", Symbol(print_label, Type(Procedure, {new Data(arg_name, "", {}, Type(Bool))}, new Type(Void), std::string("")))});
-    std::string func = print_label + ":\nprintf(\"%i\"," + arg_name + ");\ngoto return_label;";
+    Symbol symbol;
+    symbol_table_stack.consult("print_bool", symbol);
+    std::string print_label = symbol.internal_name;
+    std::string arg_name = symbol.type.param_types[0]->var_name;
+    std::string func = print_label + ":\nprintf(\"%s\", " + arg_name + "? \"true\" : \"false\");\ngoto return_label;";
     return func;
 }
 
 std::string expi_func() {
-    std::string exp_label = new_label("expi_label");
-    std::string exp_func_out = new_var(Type(Int), "expi_func_out");
-    std::string exp_arg_a = new_var(Type(Int), "expi_arg_a");
-    std::string exp_arg_b = new_var(Type(Int), "expi_arg_b");
-    symbol_table_stack.insert({"expi", Symbol(exp_label, Type(Procedure, {new Data(exp_arg_a, "", {}, Type(Int)), new Data(exp_arg_b, "", {}, Type(Int))}, 
-                                new Type(Int), exp_func_out))});
-    std::string func = exp_label + ":\n" + exp_func_out + " = pow(" + exp_arg_a + ", " + exp_arg_b  + ");\ngoto return_label;";
+    Symbol symbol;
+    symbol_table_stack.consult("expi", symbol);
+    std::string exp_label = symbol.internal_name;
+    std::string exp_func_out = symbol.type.return_var_name;
+    std::string exp_arg_a = symbol.type.param_types[0]->var_name;
+    std::string exp_arg_b = symbol.type.param_types[1]->var_name;
+    std::string func = exp_label + ":\n" + exp_func_out + " = pow((double)" + exp_arg_a + ", (double)" + exp_arg_b  + ");\ngoto return_label;";
     return func;
 }
 
 std::string expf_func() {
-    std::string exp_label = new_label("expf_label");
-    std::string exp_func_out = new_var(Type(Int), "expf_func_out");
-    std::string exp_arg_a = new_var(Type(Int), "expf_arg_a");
-    std::string exp_arg_b = new_var(Type(Int), "expf_arg_b");
-    symbol_table_stack.insert({"expf", Symbol(exp_label, Type(Procedure, {new Data(exp_arg_a, "", {}, Type(Int)), new Data(exp_arg_b, "", {}, Type(Int))}, 
-                                new Type(Int), exp_func_out))});
-    std::string func = exp_label + ":\n" + exp_func_out + " = pow(" + exp_arg_a + ", " + exp_arg_b  + ");\ngoto return_label;";
+    Symbol symbol;
+    symbol_table_stack.consult("expf", symbol);
+    std::string exp_label = symbol.internal_name;
+    std::string exp_func_out = symbol.type.return_var_name;
+    std::string exp_arg_a = symbol.type.param_types[0]->var_name;
+    std::string exp_arg_b = symbol.type.param_types[1]->var_name;
+    std::string func = exp_label + ":\n" + exp_func_out + " = pow((double)" + exp_arg_a + ", (double)" + exp_arg_b  + ");\ngoto return_label;";
     return func;
+}
+
+// Adding lib symbols to symbol table
+void populate_symbol_table() {
+    Type Tint(Int);
+    Type Tfloat(Float);
+    Type Tbool(Bool);
+    Type Tvoid(Void);
+    Type Tstring(String);
+
+    symbol_table_stack.insert({"print_int", 
+                               Symbol(new_label("print_int"), Type(Procedure, 
+                                      {new Data(new_var(Tint, "print_int_arg"), "", {}, Tint)}, 
+                                       new Type(Void), ""))});
+
+    symbol_table_stack.insert({"print_float", 
+                               Symbol(new_label("print_float"), Type(Procedure, 
+                               {new Data(new_var(Tfloat, "print_float_arg"), "", {}, Tfloat)}, 
+                               new Type(Void), ""))});
+
+    symbol_table_stack.insert({"print_string", 
+                               Symbol(new_label("print_string"), Type(Procedure, 
+                               {new Data(new_var(Tstring, "print_string_arg"), "", {}, Tstring)}, 
+                               new Type(Void), ""))});
+
+    symbol_table_stack.insert({"print_bool",
+                               Symbol(new_label("print_bool"), Type(Procedure, 
+                                      {new Data(new_var(Tbool, "print_bool_arg"), "", {}, Tbool)}, 
+                                       new Type(Void), ""))});
+
+    symbol_table_stack.insert({"expi", 
+                               Symbol(new_label("expi"), Type(Procedure, 
+                                      {new Data(new_var(Tint, "expi_arg_a"), "", {}, Tint), 
+                                       new Data(new_var(Tint, "expi_arg_b"), "", {}, Tint)}, 
+                                       new Type(Int), new_var(Tint, "expi_out")))});
+
+    symbol_table_stack.insert({"expf", 
+                               Symbol(new_label("expf"), Type(Procedure, 
+                                      {new Data(new_var(Tfloat, "expf_arg_a"), "", {}, Tfloat), 
+                                       new Data(new_var(Tfloat, "expf_arg_b"), "", {}, Tfloat)}, 
+                                       new Type(Float), new_var(Tfloat, "expf_out")))});
 }
 
 std::string lib_functions() {
@@ -269,11 +313,9 @@ std::string lib_functions() {
     functions += expf_func();
     return functions;
 }
-void push_return_key(StmtListType stmt_list, int key) {
-    stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(key) + ";\n");
-}
 
-void flush_file(StmtListType instruction_list) {
+void push_return_key(StmtListType& stmt_list, int key) {
+    stmt_list.push_back("return_keys[return_keys_size++] = " + std::to_string(key) + ";\n");
 }
 
 %}
@@ -434,15 +476,16 @@ void flush_file(StmtListType instruction_list) {
 
 %%
 
-program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {
+program : KW_PROGRAM {populate_symbol_table();} ID KW_BEGIN opt_decl_list KW_END {
             Symbol symbol;
             if (!symbol_table_stack.consult("main", symbol)) {
                 yyerror("Missing entry point: a procedure named main has to be declared");
             } 
-            $4->push_back(lib_functions());
 
             decl_buf.push_back("int return_keys[1024];\n");
             decl_buf.push_back("int return_keys_size = 0;\n");
+
+            $5->push_back(lib_functions()); // Add lib_functions to stmt_list buffer
 
             // Flush decl_buf
             std::ofstream file_out(path_file_out);
@@ -453,7 +496,7 @@ program : KW_PROGRAM ID KW_BEGIN opt_decl_list KW_END {
 
             // Flush stmt_list
             file_out << "int main() {\n  goto " + symbol.internal_name + ";\n";
-            for (std::string instruction : *$4) {
+            for (std::string instruction : *$5) {
                 file_out << instruction;
             }
             file_out << "}";
@@ -816,7 +859,7 @@ exp : exp OP_AND exp {
         symbol_table_stack.consult(func_name, symbol_exp);
         stmt_list.push_back(symbol_exp.type.param_types[0]->var_name + " = " + $1->var_name + ";\n");
         stmt_list.push_back(symbol_exp.type.param_types[1]->var_name + " = " + $3->var_name + ";\n");
-        int return_key = new_return_label(stmt_list);
+        int return_key = new_return_key();
         push_return_key(stmt_list, return_key);
         stmt_list.push_back("goto " + symbol_exp.internal_name + ";\n");
         stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
@@ -935,10 +978,10 @@ literal : FLOAT_LITERAL {
 ;
 
 bool_literal : KW_TRUE {
-    $$ = new Literal(Type(Bool), "true");
+    $$ = new Literal(Type(Bool), "1");
 }
 | KW_FALSE {
-    $$ = new Literal(Type(Bool), "false");
+    $$ = new Literal(Type(Bool), "0");
 }
 ;
 
@@ -1044,6 +1087,7 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
         error_message += std::to_string(param_types.size());
         yyerror(error_message.c_str());
     }
+
     
     // Check if arguments types match with expected types and initialize them
     StmtListType stmt_list;
@@ -1057,10 +1101,11 @@ call_stmt : ID OPEN_PAREN opt_arguments_list CLOSE_PAREN {
             yyerror(error_message.c_str());
         }
 
+        conc_list_in_place(stmt_list, param_types[idx]->stmt_list);
         stmt_list.push_back(expected_param_types[idx]->var_name + " = " + param_types[idx]->var_name + ";\n");
     }
      
-    int return_key = new_return_label(stmt_list);
+    int return_key = new_return_key();
     push_return_key(stmt_list, return_key);
     stmt_list.push_back(std::string("goto ") + proc_symbol.internal_name + ";\n");
     stmt_list.push_back(std::string("return_label") + std::to_string(return_key) + ":\n");
