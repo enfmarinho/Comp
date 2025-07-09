@@ -7,14 +7,17 @@ begin
     begin
         // Print to stdout the result of 2 to the power of 3
         print_int(expi(2, 3));
+        print_string("\n");
 
         // Print to stdout the result of 2.2 to the power of 3.0
-        print_float(expf(2.2, 3.0));
+        print_float(expf(1.1, 2.1));
+        print_string("\n");
 
         // Print to stdout the boolean true
         print_bool(true);
+        print_string("\n");
 
         // Print to stdout "Hello, World!\n"
-        print_string("Hello, World!\n");
+        print_string("Hello, World!\n")
     end
 end
