@@ -8,11 +8,17 @@ begin
         var x: int := 0;
         var y: int := 0
     in
-        while x < 10 do 
-            while y < 10 do
+        while x < 2 do 
+            print_string("x: ");
+            print_int(x);
+            print_string("\n");
+            x := x + 1
+            while y < 3 do
+                print_string("y: ");
+                print_int(y);
+                print_string("\n");
                 y := y + 1
             od;
-            x := x + 1
         od
     end
 end

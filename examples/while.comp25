@@ -8,7 +8,10 @@ begin
         var x: int
     in
         x := 0;
-        while x < 10 do 
+        while expi(x, 2) < 20 do 
+            print_string("x: ");
+            print_int(expi(x, 2));
+            print_string("\n");
             x := x + 1
         od
     end

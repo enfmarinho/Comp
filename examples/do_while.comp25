@@ -9,8 +9,10 @@ begin
     in
         x := 0;
         do 
+            print_int(x);
+            print_string("\n");
             x := x + 1;
-            exit when x >= 40
+            exit when x >= 10
         od 
     end
 end

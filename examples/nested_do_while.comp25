@@ -9,13 +9,19 @@ begin
         var y: int := 0
     in
         do 
+            print_string("x: ");
+            print_int(x);
+            print_string("\n");
             x := x + 1;
+            y := 0;
             do 
+                print_string("y: ");
+                print_int(y);
+                print_string("\n");
                 y := y + 1;
-                exit when y > 10
+                exit when y > 5
             od;
-            exit when x > 20
-        od 
+            exit when x > 3 
     end
 end
 
