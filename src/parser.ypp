@@ -1016,6 +1016,7 @@ opt_else_stmt : /* empty */ {
 
 if_stmt : KW_IF exp {assert_condition(&($2->type));} KW_THEN opt_stmt_list opt_else_stmt KW_FI {
             StmtListType stmt_list;
+            conc_list_in_place(stmt_list, $2->stmt_list);
             stmt_list.push_back(std::string("if (!") + $2->var_name + ") goto " + $6->label + ";\n");
             conc_list_in_place(stmt_list, *$5);
             std::string end_if_stmt_label = new_label();
