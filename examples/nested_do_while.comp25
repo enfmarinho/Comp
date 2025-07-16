@@ -22,6 +22,7 @@ begin
                 exit when y > 5
             od;
             exit when x > 3 
+        od
     end
 end
 

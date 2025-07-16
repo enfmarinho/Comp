@@ -10,10 +10,11 @@ begin
         x := 0;
         do 
             print_int(x);
-            print_string("\n");
+            print_string(" ");
             x := x + 1;
             exit when x >= 10
-        od 
+        od;
+        print_string("\n")
     end
 end
 
