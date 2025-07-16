@@ -3,7 +3,6 @@
  */
 program swap
 begin 
-    // Procedure to swap two values //
     procedure swap(a: ref(int), b: ref(int))
     begin
         var tmp: int
@@ -17,15 +16,23 @@ begin
     procedure main()
     begin
         var x: int;
-        var y: int;
-        var xr: ref(int);
-        var yr: ref(int)
+        var y: int
     in
         x := 42;
         y := 84;
-        xr := ref(x);
-        yr := ref(y);
-        swap(xr, yr)
+
+        print_string("Before swapping (x, y): ");
+        print_int(x);
+        print_string(" ");
+        print_int(y);
+
+        swap(ref(x), ref(y));
+
+        print_string("\nAfter swapping (x, y): ");
+        print_int(x);
+        print_string(" ");
+        print_int(y);
+        print_string("\n")
     end
 end
 
